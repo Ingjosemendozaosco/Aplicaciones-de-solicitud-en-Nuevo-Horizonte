@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roles - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-key"/></svg>
+                Seguridad
+            </span>
+            <h1>Roles y permisos</h1>
+            <p class="subtitle">Accesos por módulo para cada área del sistema.</p>
+        </div>
+        <a th:href="@{/roles/nuevo}" class="btn btn-primary">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Nuevo rol
+        </a>
+    </div>
+
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        <span th:text="${error}"></span>
+    </div>
+
+    <div class="role-grid">
+        <article class="role-card" th:each="r : ${roles}">
+            <div class="role-head">
+                <span class="role-dot" th:style="'background:' + ${r.color}"></span>
+                <div>
+                    <h3 th:text="${r.nombre}"></h3>
+                    <p th:text="${r.descripcion != null ? r.descripcion : 'Sin descripción'}"></p>
+                </div>
+                <span class="badge"
+                      th:classappend="${r.activo} ? 'aprobada' : 'rechazada'"
+                      th:text="${r.activo} ? 'ACTIVO' : 'INACTIVO'"></span>
+            </div>
+
+            <div class="role-meta">
+                <span th:text="${r.totalPermisos} + ' módulos'"></span>
+                <span th:if="${r.esSistema}" class="role-system">Sistema</span>
+            </div>
+
+            <div class="role-actions">
+                <a th:href="@{'/roles/' + ${r.id} + '/permisos'}" class="btn btn-ghost">
+                    <svg class="icon icon-xs"><use href="#i-key"/></svg>
+                    Permisos
+                </a>
+                <a th:href="@{'/roles/' + ${r.id} + '/editar'}" class="btn btn-ghost">
+                    <svg class="icon icon-xs"><use href="#i-edit"/></svg>
+                    Editar
+                </a>
+                <form th:if="${!r.esSistema}"
+                      th:action="@{'/roles/' + ${r.id} + '/eliminar'}" method="post"
+                      onsubmit="return confirm('¿Eliminar este rol?');">
+                    <button type="submit" class="btn btn-ghost btn-ghost--danger">
+                        <svg class="icon icon-xs"><use href="#i-trash"/></svg>
+                        Eliminar
+                    </button>
+                </form>
+            </div>
+        </article>
+    </div>
+</main>
+</body>
+</html>

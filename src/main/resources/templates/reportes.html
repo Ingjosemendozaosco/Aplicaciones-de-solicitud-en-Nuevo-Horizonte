@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reportes - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-chart"/></svg>
+                Indicadores
+            </span>
+            <h1>Reportes de atención</h1>
+            <p class="subtitle">Indicadores de desempeño de las solicitudes.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></div>
+            <div>
+                <div class="stat-value" th:text="${totalSolicitudes}">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card--warn">
+            <div class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></div>
+            <div>
+                <div class="stat-value" th:text="${pendientes}">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card--success">
+            <div class="stat-icon"><svg class="icon"><use href="#i-check-circle"/></svg></div>
+            <div>
+                <div class="stat-value" th:text="${aprobadas}">0</div>
+                <div class="stat-label">Aprobadas</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card--danger">
+            <div class="stat-icon"><svg class="icon"><use href="#i-x"/></svg></div>
+            <div>
+                <div class="stat-value" th:text="${rechazadas}">0</div>
+                <div class="stat-label">Rechazadas</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-grid" style="margin-top:22px;">
+        <section class="card">
+            <h2 class="card-title">
+                <svg class="icon"><use href="#i-chart"/></svg>
+                Distribución por estado
+            </h2>
+            <div class="bar-row" th:each="e : ${porEstado}">
+                <div class="bar-label">
+                    <span th:text="${e.key}"></span>
+                    <strong th:text="${e.value}"></strong>
+                </div>
+                <div class="bar">
+                    <div class="bar-fill"
+                         th:style="'width:' + ${totalSolicitudes > 0 ? (e.value * 100 / totalSolicitudes) : 0} + '%'"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 class="card-title">
+                <svg class="icon"><use href="#i-building"/></svg>
+                Solicitudes por área
+            </h2>
+            <div class="table-wrap">
+                <table class="table--compact">
+                    <thead>
+                    <tr>
+                        <th>Área</th>
+                        <th>Total</th>
+                        <th>%</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="e : ${porArea}" th:if="${e.value > 0}">
+                        <td th:text="${e.key}"></td>
+                        <td th:text="${e.value}"></td>
+                        <td th:text="${totalSolicitudes > 0 ? (e.value * 100 / totalSolicitudes) : 0} + '%'"></td>
+                    </tr>
+                    <tr th:if="${#maps.isEmpty(porArea)}">
+                        <td colspan="3" style="text-align:center;color:#64748b;">Sin datos</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <section class="card card--table" th:if="${!#lists.isEmpty(solicitudes)}" style="margin-top:22px;">
+        <div class="card-head">
+            <h2 class="card-title" style="margin-bottom:0;">
+                <svg class="icon"><use href="#i-clock"/></svg>
+                Últimas solicitudes
+            </h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Solicitante</th>
+                    <th>Área</th>
+                    <th>Recurso</th>
+                    <th>Estado</th>
+                    <th>Fecha decisión</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${solicitudes}">
+                    <td th:text="${s.numeroSolicitud}"></td>
+                    <td th:text="${s.nombreSolicitante}"></td>
+                    <td th:text="${s.areaSolicitante}"></td>
+                    <td th:text="${s.recursoModulo}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${#strings.toLowerCase(s.estado.toString())}"
+                              th:text="${s.estado}"></span>
+                    </td>
+                    <td th:text="${s.fechaAprobacionRechazo != null ? s.fechaAprobacionRechazo : '—'}"></td>
+                    <td>
+                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost">Ver</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

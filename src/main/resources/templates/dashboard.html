@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-grid"/></svg>
+                Panel
+            </span>
+            <h1>Panel de control</h1>
+            <p class="subtitle"
+               th:text="${visionGlobal ? 'Vista global del sistema de solicitudes' : 'Resumen de tus solicitudes'}"></p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${totalSolicitudes}">0</div>
+                <div class="stat-label">Total solicitudes</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card--warn">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-clock"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${pendientes}">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card--success">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-check-circle"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${aprobadas}">0</div>
+                <div class="stat-label">Aprobadas</div>
+            </div>
+        </div>
+        <div class="stat-card stat-card--danger">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-x"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${rechazadas}">0</div>
+                <div class="stat-label">Rechazadas</div>
+            </div>
+        </div>
+        <div sec:authorize="hasRole('Administración')" class="stat-card">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-users"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${totalUsuarios}">0</div>
+                <div class="stat-label">Usuarios</div>
+            </div>
+        </div>
+        <div sec:authorize="hasRole('Administración')" class="stat-card">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-key"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${totalRoles}">0</div>
+                <div class="stat-label">Roles</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="card" style="margin-top:22px;">
+        <h2 class="card-title">
+            <svg class="icon"><use href="#i-grid"/></svg>
+            Accesos rápidos
+        </h2>
+        <div class="quick-grid">
+            <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Gerencia')"
+               th:href="@{/solicitudes/nueva}" class="quick-card">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                <div>
+                    <strong>Nueva solicitud</strong>
+                    <span>Registrar una solicitud</span>
+                </div>
+            </a>
+            <a th:href="@{/solicitudes}" class="quick-card">
+                <svg class="icon"><use href="#i-list"/></svg>
+                <div>
+                    <strong>Ver solicitudes</strong>
+                    <span>Historial y seguimiento</span>
+                </div>
+            </a>
+            <a sec:authorize="hasRole('Administración')" th:href="@{/usuarios}" class="quick-card">
+                <svg class="icon"><use href="#i-users"/></svg>
+                <div>
+                    <strong>Usuarios</strong>
+                    <span>Altas, roles y estado</span>
+                </div>
+            </a>
+            <a sec:authorize="hasRole('Administración')" th:href="@{/roles}" class="quick-card">
+                <svg class="icon"><use href="#i-key"/></svg>
+                <div>
+                    <strong>Roles y permisos</strong>
+                    <span>Accesos por módulo</span>
+                </div>
+            </a>
+            <a sec:authorize="hasAnyRole('Administración','Gerencia')"
+               th:href="@{/reportes}" class="quick-card">
+                <svg class="icon"><use href="#i-chart"/></svg>
+                <div>
+                    <strong>Reportes</strong>
+                    <span>Indicadores de atención</span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="card card--table" th:if="${!#lists.isEmpty(recientes)}" style="margin-top:22px;">
+        <div class="card-head">
+            <h2 class="card-title" style="margin-bottom:0;">
+                <svg class="icon"><use href="#i-clock"/></svg>
+                Solicitudes recientes
+            </h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Solicitante</th>
+                    <th>Área</th>
+                    <th>Recurso</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${recientes}">
+                    <td th:text="${s.numeroSolicitud}"></td>
+                    <td th:text="${s.nombreSolicitante}"></td>
+                    <td th:text="${s.areaSolicitante}"></td>
+                    <td th:text="${s.recursoModulo}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${#strings.toLowerCase(s.estado.toString())}"
+                              th:text="${s.estado}"></span>
+                    </td>
+                    <td th:text="${s.fechaSolicitud}"></td>
+                    <td>
+                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost">
+                            Ver
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar sesión - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="login-page">
+<div th:replace="~{fragments/icons :: icons}"></div>
+
+<div class="login-orb orb-1"></div>
+<div class="login-orb orb-2"></div>
+<div class="login-orb orb-3"></div>
+
+<main class="login-card">
+    <div class="login-brand">
+        <span class="logo-badge">
+            <svg class="icon"><use href="#i-compass"/></svg>
+        </span>
+        <div>
+            <h1>Nuevo Horizonte</h1>
+            <p>Gestión de solicitudes</p>
+        </div>
+    </div>
+
+    <h2>Iniciar sesión</h2>
+
+    <div th:if="${param.error}" class="alert"
+         style="background:#fee2e2;border-color:#fecaca;color:#991b1b;">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        Usuario o contraseña incorrectos.
+    </div>
+    <div th:if="${param.logout}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        Sesión cerrada correctamente.
+    </div>
+
+    <form class="login-form" th:action="@{/login}" method="post">
+        <div class="field">
+            <label for="username">Usuario</label>
+            <div class="input-group">
+                <svg class="icon"><use href="#i-user"/></svg>
+                <input id="username" name="username" type="text"
+                       placeholder="ADM, AP, AV o GRT" required autofocus
+                       autocomplete="username">
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="password">Contraseña</label>
+            <div class="input-group">
+                <svg class="icon"><use href="#i-lock"/></svg>
+                <input id="password" name="password" type="password"
+                       placeholder="••••••••" required autocomplete="current-password">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+            <svg class="icon"><use href="#i-logout"/></svg>
+            Ingresar
+        </button>
+    </form>
+
+    <div class="login-hint">
+        <strong>Credenciales demo:</strong> ADM, GRT, AP o AV · contraseña <strong>admin123</strong><br>
+        Administración aprueba o rechaza; las demás áreas registran solicitudes.
+    </div>
+
+    <p style="margin-top:16px;text-align:center;font-size:11.5px;color:#94a3b8;">
+        © 2026 Nuevo Horizonte
+    </p>
+</main>
+</body>
+</html>

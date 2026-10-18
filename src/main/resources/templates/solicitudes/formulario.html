@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nueva Solicitud - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container container--narrow">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-file"/></svg>
+                Registro
+            </span>
+            <h1>Nueva solicitud</h1>
+            <p class="subtitle">Complete los datos para registrar la solicitud en el sistema.</p>
+        </div>
+    </div>
+
+    <section class="card">
+        <div th:if="${error}" class="alert alert-error" style="margin-bottom:1rem;padding:.75rem 1rem;border-radius:.5rem;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">
+            <svg class="icon"><use href="#i-x"/></svg>
+            <span th:text="${error}"></span>
+        </div>
+        <form th:action="@{/solicitudes}" method="post" th:object="${solicitud}" enctype="multipart/form-data">
+            <div class="grid">
+                <div class="field full">
+                    <label for="nombreSolicitante">
+                        <svg class="icon"><use href="#i-user"/></svg>
+                        Nombre del solicitante
+                    </label>
+                    <input id="nombreSolicitante" type="text" th:field="*{nombreSolicitante}"
+                           placeholder="Nombre completo" required maxlength="120">
+                </div>
+
+                <div class="field">
+                    <label for="fechaSolicitud">
+                        <svg class="icon"><use href="#i-calendar"/></svg>
+                        Fecha de solicitud
+                    </label>
+                    <input id="fechaSolicitud" type="date" th:field="*{fechaSolicitud}" required>
+                </div>
+
+                <div class="field">
+                    <label for="areaSolicitante">
+                        <svg class="icon"><use href="#i-building"/></svg>
+                        Área solicitante
+                    </label>
+                    <select id="areaSolicitante" th:field="*{areaSolicitante}" required>
+                        <option value="">Seleccione un área</option>
+                        <option th:each="area : ${areas}" th:value="${area}" th:text="${area}"></option>
+                    </select>
+                </div>
+
+                <div class="field full">
+                    <label for="recursoModulo">
+                        <svg class="icon"><use href="#i-layer"/></svg>
+                        Recurso o módulo solicitado
+                    </label>
+                    <input id="recursoModulo" type="text" th:field="*{recursoModulo}"
+                           placeholder="Ej: módulo de reservas" required maxlength="120">
+                </div>
+
+                <div class="field full">
+                    <label for="motivo">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                        Motivo de la solicitud
+                    </label>
+                    <textarea id="motivo" th:field="*{motivo}"
+                              placeholder="Describa el motivo de la solicitud" required></textarea>
+                </div>
+
+                <div class="field full">
+                    <label for="responsableAprobacion">
+                        <svg class="icon"><use href="#i-shield"/></svg>
+                        Responsable de aprobación
+                    </label>
+                    <input id="responsableAprobacion" type="text" th:field="*{responsableAprobacion}"
+                           placeholder="Nombre del responsable" required maxlength="120">
+                </div>
+
+                <div class="field full">
+                    <label for="archivo">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                        Archivo adjunto (opcional)
+                    </label>
+                    <input id="archivo" type="file" name="archivo"
+                           accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                    <div id="archivoPreview" style="display:none;align-items:center;gap:.6rem;margin-top:.6rem;padding:.4rem .6rem;border:1px solid var(--border,#e5e7eb);border-radius:.5rem;width:fit-content;">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                        <span id="archivoNombre" style="font-size:.9rem;color:var(--text,#111827);"></span>
+                        <button type="button" id="btnQuitarArchivo" title="Quitar"
+                                style="border:none;background:transparent;cursor:pointer;color:#b91c1c;font-weight:700;font-size:1rem;line-height:1;padding:0 .2rem;">
+                            &times;
+                        </button>
+                    </div>
+                    <small style="color:var(--text-muted,#6b7280);display:block;margin-top:.35rem;">
+                        Formatos permitidos: imágenes (jpg, png, gif, webp) y documentos (pdf, doc, docx, xls, xlsx, txt). Máx. 10 MB.
+                    </small>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a th:href="@{/solicitudes}" class="btn btn-secondary">
+                    <svg class="icon"><use href="#i-arrow-left"/></svg>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-send"/></svg>
+                    Enviar solicitud
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnQuitar = document.getElementById('btnQuitarArchivo');
+    const preview = document.getElementById('archivoPreview');
+    const nombre = document.getElementById('archivoNombre');
+    const archivoInput = document.getElementById('archivo');
+    if (archivoInput) {
+        archivoInput.addEventListener('change', function () {
+            if (archivoInput.files.length > 0) {
+                nombre.textContent = archivoInput.files[0].name;
+                preview.style.display = 'flex';
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    }
+    if (btnQuitar) {
+        btnQuitar.addEventListener('click', function () {
+            archivoInput.value = '';
+            preview.style.display = 'none';
+        });
+    }
+});
+</script>
+</body>
+</html>

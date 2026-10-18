@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Permisos - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <a th:href="@{/roles}" class="back">
+        <svg class="icon"><use href="#i-arrow-left"/></svg>
+        Volver a roles
+    </a>
+
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-key"/></svg>
+                Permisos
+            </span>
+            <h1 th:text="'Permisos de ' + ${rol.nombre}"></h1>
+            <p class="subtitle">Marque las acciones permitidas por módulo.</p>
+        </div>
+    </div>
+
+    <section class="card">
+        <form th:action="@{'/roles/' + ${rol.id} + '/permisos'}" method="post" th:object="${form}">
+            <div class="table-wrap">
+                <table class="perm-table">
+                    <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Leer</th>
+                        <th>Crear</th>
+                        <th>Actualizar</th>
+                        <th>Eliminar</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item, it : ${form.items}">
+                        <td>
+                            <input type="hidden" th:field="*{items[__${it.index}__].modulo}">
+                            <span th:text="${item.etiqueta}"></span>
+                        </td>
+                        <td><input type="checkbox" th:field="*{items[__${it.index}__].leer}"></td>
+                        <td><input type="checkbox" th:field="*{items[__${it.index}__].crear}"></td>
+                        <td><input type="checkbox" th:field="*{items[__${it.index}__].actualizar}"></td>
+                        <td><input type="checkbox" th:field="*{items[__${it.index}__].eliminar}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="actions">
+                <a th:href="@{/roles}" class="btn btn-secondary">
+                    <svg class="icon"><use href="#i-arrow-left"/></svg>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-save"/></svg>
+                    Guardar permisos
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

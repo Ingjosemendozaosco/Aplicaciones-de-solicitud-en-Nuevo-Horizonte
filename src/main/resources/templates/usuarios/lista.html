@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usuarios - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-users"/></svg>
+                Seguridad
+            </span>
+            <h1>Usuarios</h1>
+            <p class="subtitle">Gestión de usuarios, roles y estado de acceso.</p>
+        </div>
+        <a th:href="@{/usuarios/nuevo}" class="btn btn-primary">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Nuevo usuario
+        </a>
+    </div>
+
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        <span th:text="${error}"></span>
+    </div>
+
+    <section class="card card--table">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Correo</th>
+                    <th>Roles</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${usuarios}">
+                    <td>
+                        <strong th:text="${u.username}"></strong>
+                    </td>
+                    <td th:text="${u.email}"></td>
+                    <td>
+                        <span class="role-chip" th:each="r : ${u.roles}" th:text="${r}"></span>
+                        <span th:if="${#lists.isEmpty(u.roles)}" class="muted">Sin rol</span>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${u.activo} ? 'aprobada' : 'rechazada'"
+                              th:text="${u.activo} ? 'ACTIVO' : 'INACTIVO'"></span>
+                    </td>
+                    <td th:text="${u.fechaCreacion != null ? u.fechaCreacion.toLocalDate() : '—'}"></td>
+                    <td>
+                        <div class="actions-cell">
+                            <a th:href="@{'/usuarios/' + ${u.id} + '/editar'}" class="btn btn-ghost">
+                                <svg class="icon icon-xs"><use href="#i-edit"/></svg>
+                                Editar
+                            </a>
+                            <form th:action="@{'/usuarios/' + ${u.id} + '/estado'}" method="post" class="inline-form">
+                                <input type="hidden" name="activo" th:value="${!u.activo}">
+                                <button type="submit" class="btn btn-ghost">
+                                    <svg class="icon icon-xs"><use href="#i-power"/></svg>
+                                    <span th:text="${u.activo} ? 'Desactivar' : 'Activar'"></span>
+                                </button>
+                            </form>
+                            <form th:action="@{'/usuarios/' + ${u.id} + '/eliminar'}" method="post"
+                                  class="inline-form"
+                                  onsubmit="return confirm('¿Eliminar este usuario?');">
+                                <button type="submit" class="btn btn-ghost btn-ghost--danger">
+                                    <svg class="icon icon-xs"><use href="#i-trash"/></svg>
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

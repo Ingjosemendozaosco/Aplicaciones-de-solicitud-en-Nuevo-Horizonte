@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header th:fragment="topbar" class="topbar">
+    <a th:href="@{/dashboard}" class="brand">
+        <span class="logo-badge">
+            <svg class="icon"><use href="#i-compass"/></svg>
+        </span>
+        Nuevo Horizonte
+    </a>
+
+    <nav class="topnav">
+        <a th:href="@{/dashboard}">
+            <svg class="icon"><use href="#i-grid"/></svg>
+            Panel
+        </a>
+        <a th:href="@{/solicitudes}">
+            <svg class="icon"><use href="#i-list"/></svg>
+            Solicitudes
+        </a>
+        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Gerencia')"
+           th:href="@{/solicitudes/nueva}" class="nav-btn nav-btn--accent">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Nueva
+        </a>
+        <a sec:authorize="hasRole('Administración')" th:href="@{/usuarios}">
+            <svg class="icon"><use href="#i-users"/></svg>
+            Usuarios
+        </a>
+        <a sec:authorize="hasRole('Administración')" th:href="@{/roles}">
+            <svg class="icon"><use href="#i-key"/></svg>
+            Roles
+        </a>
+        <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/reportes}">
+            <svg class="icon"><use href="#i-chart"/></svg>
+            Reportes
+        </a>
+        <button type="button" class="nav-btn"
+                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <svg class="icon"><use href="#i-logout"/></svg>
+            Salir
+        </button>
+    </nav>
+
+    <form id="logout-form" th:action="@{/logout}" method="post" hidden></form>
+</header>
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Horizonte Turismo - Administración de Solicitudes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .sidebar {
+            background: #2c3e50;
+            color: white;
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            color: #667eea;
+        }
+        .sidebar nav a {
+            display: block;
+            color: #bdc3c7;
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            background: #34495e;
+            color: white;
+        }
+        .content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #666;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 30px;
+        }
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            color: #666;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .tab.active {
+            color: #667eea;
+        }
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #667eea;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .table th {
+            background: #f5f7fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        .table td {
+            font-size: 14px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge.pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .badge.aprobada {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge.rechazada {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn {
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .btn-aprobar {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .btn-aprobar:hover {
+            background: #a7f3d0;
+        }
+        .btn-rechazar {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-rechazar:hover {
+            background: #fecaca;
+        }
+        .form-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .form-modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-close {
+            float: right;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .modal-footer {
+            margin-top: 25px;
+            text-align: right;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-save {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .search-bar input {
+            width: 300px;
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">🏖️ Horizonte</div>
+        <nav>
+            <a th:href="@{/dashboard}">Dashboard</a>
+            <a th:href="@{/formulario}">Nueva Solicitud</a>
+            <a th:href="@{/admin/solicitudes}" class="active">Administrar Solicitudes</a>
+            <a th:href="@{/area-producto/solicitudes}">Área Producto</a>
+            <a th:href="@{/area-ventas/solicitudes}">Área Ventas</a>
+            <a th:href="@{/gerencia/solicitudes}">Gerencia</a>
+        </nav>
+    </aside>
+
+    <div class="content">
+        <header class="header">
+            <h1>Administración de Solicitudes</h1>
+            <p>Revise, apruebe o rechace las solicitudes recibidas</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('pendientes')">Pendientes (4)</div>
+            <div class="tab" onclick="showTab('aprobadas')">Aprobadas (0)</div>
+            <div class="tab" onclick="showTab('rechazadas')">Rechazadas (0)</div>
+        </div>
+
+        <div id="pendientes-content">
+            <div class="search-bar">
+                <input type="text" placeholder="🔍 Buscar por número, nombre o solicitud..." id="search-input">
+            </div>
+
+            <div class="card">
+                <h2>📋 Solicitudes Pendientes de Aprobación</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th># Solicitud</th>
+                                <th>Solicitante</th>
+                                <th>Recurso Solicitado</th>
+                                <th>Motivo</th>
+                                <th>Responsable</th>
+                                <th>Fecha Envío</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#1000</td>
+                                <td>Juan Pérez</td>
+                                <td>Módulo de Reservas</td>
+                                <td>Actualización de sistema</td>
+                                <td>Carlos Rodríguez</td>
+                                <td>2025-01-15</td>
+                                <td><span class="badge pendiente">PENDIENTE</span></td>
+                                <td>
+                                    <button class="btn btn-aprobar" onclick="abrirModalAprobacion(1000)">✅ Aceptar</button>
+                                    <button class="btn btn-rechazar" onclick="abrirModalRechazo(1000)">❌ Rechazar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#1001</td>
+                                <td>María González</td>
+                                <td>Reporte de Ventas</td>
+                                <td>Nueva funcionalidad</td>
+                                <td>Laura Martínez</td>
+                                <td>2025-01-16</td>
+                                <td><span class="badge pendiente">PENDIENTE</span></td>
+                                <td>
+                                    <button class="btn btn-aprobar" onclick="abrirModalAprobacion(1001)">✅ Aceptar</button>
+                                    <button class="btn btn-rechazar" onclick="abrirModalRechazo(1001)">❌ Rechazar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#1002</td>
+                                <td>Robert Smith</td>
+                                <td>Gestión de Clientes</td>
+                                <td>Mejora en rendimiento</td>
+                                <td>Carlos Rodríguez</td>
+                                <td>2025-01-16</td>
+                                <td><span class="badge pendiente">PENDIENTE</span></td>
+                                <td>
+                                    <button class="btn btn-aprobar" onclick="abrirModalAprobacion(1002)">✅ Aceptar</button>
+                                    <button class="btn btn-rechazar" onclick="abrirModalRechazo(1002)">❌ Rechazar</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#1003</td>
+                                <td>Sofía Martínez</td>
+                                <td>Módulo de Pagos</td>
+                                <td>Corrección de errores</td>
+                                <td>Laura Martínez</td>
+                                <td>2025-01-17</td>
+                                <td><span class="badge pendiente">PENDIENTE</span></td>
+                                <td>
+                                    <button class="btn btn-aprobar" onclick="abrirModalAprobacion(1003)">✅ Aceptar</button>
+                                    <button class="btn btn-rechazar" onclick="abrirModalRechazo(1003)">❌ Rechazar</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="aprobadas-content" style="display:none;">
+            <div class="search-bar">
+                <input type="text" placeholder="🔍 Buscar solicitudes aprobadas...">
+            </div>
+            <div class="card">
+                <h2>✅ Solicitudes Aprobadas</h2>
+                <p style="text-align: center; color: #666; padding: 40px;">
+                    No hay solicitudes aprobadas en el sistema.
+                </p>
+            </div>
+        </div>
+
+        <div id="rechazadas-content" style="display:none;">
+            <div class="search-bar">
+                <input type="text" placeholder="🔍 Buscar solicitudes rechazadas...">
+            </div>
+            <div class="card">
+                <h2>❌ Solicitudes Rechazadas</h2>
+                <p style="text-align: center; color: #666; padding: 40px;">
+                    No hay solicitudes rechazadas en el sistema.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-modal" id="aprobacion-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✅ Aceptar Solicitud</h3>
+                <button class="modal-close" onclick="cerrarModalAprobacion()">✖️</button>
+            </div>
+            <form th:action="@{/admin/aprobar}" method="post">
+                <input type="hidden" id="id-solicitud-aprobacion" name="id">
+                <div class="form-group">
+                    <label>Fecha de Aprobación</label>
+                    <input type="datetime-local" name="fechaAprobacionRechazo" required>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option value="APROBADA">APROBADA</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="cerrarModalAprobacion()">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="form-modal" id="rechazo-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>❌ Rechazar Solicitud</h3>
+                <button class="modal-close" onclick="cerrarModalRechazo()">✖️</button>
+            </div>
+            <form th:action="@{/admin/aprobar}" method="post">
+                <input type="hidden" id="id-solicitud-rechazo" name="id">
+                <div class="form-group">
+                    <label>Fecha de Rechazo</label>
+                    <input type="datetime-local" name="fechaAprobacionRechazo" required>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option value="RECHAZADA">RECHAZADA</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="cerrarModalRechazo()">Cancelar</button>
+                    <button type="submit" class="btn-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('[id$="-content"]').forEach(c => c.style.display = 'none');
+            
+            if (tab === 'pendientes') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('pendientes-content').style.display = 'block';
+            } else if (tab === 'aprobadas') {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('aprobadas-content').style.display = 'block';
+            } else if (tab === 'rechazadas') {
+                document.querySelectorAll('.tab')[2].classList.add('active');
+                document.getElementById('rechazadas-content').style.display = 'block';
+            }
+        }
+
+        function abrirModalAprobacion(id) {
+            document.getElementById('id-solicitud-aprobacion').value = id;
+            document.getElementById('aprobacion-modal').classList.add('active');
+        }
+
+        function cerrarModalAprobacion() {
+            document.getElementById('aprobacion-modal').classList.remove('active');
+        }
+
+        function abrirModalRechazo(id) {
+            document.getElementById('id-solicitud-rechazo').value = id;
+            document.getElementById('rechazo-modal').classList.add('active');
+        }
+
+        function cerrarModalRechazo() {
+            document.getElementById('rechazo-modal').classList.remove('active');
+        }
+
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#pendientes-content table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('form-modal')) {
+                event.target.classList.remove('active');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${edicion} ? 'Editar rol - Nuevo Horizonte' : 'Nuevo rol - Nuevo Horizonte'"></title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container container--narrow">
+    <a th:href="@{/roles}" class="back">
+        <svg class="icon"><use href="#i-arrow-left"/></svg>
+        Volver a roles
+    </a>
+
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-key"/></svg>
+                Seguridad
+            </span>
+            <h1 th:text="${edicion} ? 'Editar rol' : 'Nuevo rol'"></h1>
+            <p class="subtitle">Datos generales del rol.</p>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="alert alert-error">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        <span th:text="${error}"></span>
+    </div>
+
+    <section class="card">
+        <form th:action="${edicion} ? @{'/roles/' + ${rol.id}} : @{/roles}"
+              method="post" th:object="${rol}">
+            <div class="grid">
+                <div class="field full">
+                    <label for="nombre">
+                        <svg class="icon"><use href="#i-key"/></svg>
+                        Nombre del rol
+                    </label>
+                    <input id="nombre" type="text" th:field="*{nombre}"
+                           th:readonly="${rol.esSistema}" required maxlength="60">
+                    <small th:if="${rol.esSistema}" class="muted" style="margin-top:6px;">
+                        El nombre de los roles del sistema no se puede modificar.
+                    </small>
+                </div>
+                <div class="field full">
+                    <label for="descripcion">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                        Descripción
+                    </label>
+                    <textarea id="descripcion" th:field="*{descripcion}"
+                              placeholder="Descripción del rol" maxlength="200"></textarea>
+                </div>
+                <div class="field">
+                    <label for="color">
+                        <svg class="icon"><use href="#i-grid"/></svg>
+                        Color
+                    </label>
+                    <input id="color" type="color" th:field="*{color}">
+                </div>
+                <div class="field">
+                    <label class="form-check" style="margin-top:28px;">
+                        <input type="checkbox" th:field="*{activo}">
+                        Rol activo
+                    </label>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a th:href="@{/roles}" class="btn btn-secondary">
+                    <svg class="icon"><use href="#i-arrow-left"/></svg>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-save"/></svg>
+                    Guardar rol
+                </button>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

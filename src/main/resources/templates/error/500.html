@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<div class="error-page">
+    <div class="error-card">
+        <div class="error-code">500</div>
+        <h1>Ocurrió un error</h1>
+        <p class="subtitle">No pudimos procesar tu solicitud. Verifica los datos e intenta nuevamente.</p>
+        <div style="display:flex;gap:.6rem;justify-content:center;margin-top:22px;">
+            <a th:href="@{/dashboard}" class="btn btn-primary">
+                <svg class="icon"><use href="#i-grid"/></svg>
+                Ir al panel
+            </a>
+            <a th:href="@{/solicitudes}" class="btn btn-secondary">
+                <svg class="icon"><use href="#i-arrow-left"/></svg>
+                Volver
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

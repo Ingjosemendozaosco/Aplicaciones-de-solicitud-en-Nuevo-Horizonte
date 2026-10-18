@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Horizonte Turismo - Nueva Solicitud</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .sidebar {
+            background: #2c3e50;
+            color: white;
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            color: #667eea;
+        }
+        .sidebar nav a {
+            display: block;
+            color: #bdc3c7;
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            background: #34495e;
+            color: white;
+        }
+        .content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .header {
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #666;
+        }
+        .form-container {
+            background: white;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            max-width: 800px;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-back {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .btn-back:hover {
+            background: #7f8c8d;
+        }
+        .campos-info {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 30px;
+        }
+        .campos-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .campos-info ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        .campos-info li {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">🏖️ Horizonte</div>
+        <nav>
+            <a th:href="@{/dashboard}">Dashboard</a>
+            <a href="#" class="active">Nueva Solicitud</a>
+            <a th:href="@{/admin/solicitudes}">Administrar Solicitudes</a>
+        </nav>
+    </aside>
+
+    <div class="content">
+        <header class="header">
+            <h1>Nueva Solicitud</h1>
+            <p>Complete todos los campos del formulario para enviar su solicitud</p>
+        </header>
+
+        <a th:href="@{/dashboard}" class="btn-back">← Volver al Dashboard</a>
+
+        <div class="form-container">
+            <div class="campos-info">
+                <h3>📋 Campos requeridos:</h3>
+                <ul>
+                    <li>Número de solicitud (generado automáticamente)</li>
+                    <li>Nombre del solicitante</li>
+                    <li>Fecha de solicitud</li>
+                    <li>Recurso o módulo solicitado</li>
+                    <li>Motivo de la solicitud</li>
+                    <li>Responsable de aprobación</li>
+                    <li>Estado de la solicitud</li>
+                    <li>Fecha de aprobación o rechazo</li>
+                </ul>
+            </div>
+
+            <form th:action="@{/formulario/enviar}" method="post">
+                <div class="form-section">
+                    <h2>Datos de la Solicitud</h2>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Nombre del Solicitante *</label>
+                            <input type="text" name="nombreSolicitante" required placeholder="Ingrese su nombre completo">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de Solicitud *</label>
+                            <input type="date" name="fechaSolicitud" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Recurso o Módulo Solicitado *</label>
+                            <input type="text" name="recurso" required placeholder="Ej: Módulo de Reservas">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Motivo de la Solicitud *</label>
+                            <textarea name="motivo" rows="4" required placeholder="Describa el motivo de su solicitud"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Responsable de Aprobación *</label>
+                            <input type="text" name="responsableAprobacion" required placeholder="Nombre del responsable">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Área de Destino *</label>
+                            <select name="areaDestino" required>
+                                <option value="">Seleccione un área</option>
+                                <option value="Administracion">Administración</option>
+                                <option value="Producto">Área de Producto</option>
+                                <option value="Ventas">Área de Ventas</option>
+                                <option value="Gerencia">Gerencia</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">📤 Enviar Solicitud</button>
+            </form>
+        </div>
+
+        <div class="footer" style="margin-top: 30px; text-align: center; color: #888; font-size: 13px;">
+            © 2025 Horizonte Turismo - Sistema de Gestión de Solicitudes
+        </div>
+    </div>
+</body>
+</html>

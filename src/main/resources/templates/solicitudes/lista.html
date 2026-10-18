@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solicitudes - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-list"/></svg>
+                Bandeja
+            </span>
+            <h1>Solicitudes</h1>
+            <p class="subtitle">Registro, seguimiento y decisión de solicitudes.</p>
+        </div>
+        <a th:if="${puedeCrear}" th:href="@{/solicitudes/nueva}" class="btn btn-primary">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Nueva solicitud
+        </a>
+    </div>
+
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+
+    <section class="card card--table" th:if="${!#lists.isEmpty(solicitudes)}">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Solicitante</th>
+                    <th>Fecha</th>
+                    <th>Recurso / módulo</th>
+                    <th>Área</th>
+                    <th>Responsable</th>
+                    <th>Estado</th>
+                    <th>Decisión</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s, iter : ${solicitudes}"
+                    th:style="'animation-delay:' + ${iter.index * 45} + 'ms'">
+                    <td th:text="${s.numeroSolicitud}"></td>
+                    <td th:text="${s.nombreSolicitante}"></td>
+                    <td th:text="${s.fechaSolicitud}"></td>
+                    <td th:text="${s.recursoModulo}"></td>
+                    <td th:text="${s.areaSolicitante}"></td>
+                    <td th:text="${s.responsableAprobacion}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${#strings.toLowerCase(s.estado.toString())}">
+                            <svg class="icon icon-xs" th:if="${s.estado.toString() == 'PENDIENTE'}">
+                                <use href="#i-clock"/>
+                            </svg>
+                            <svg class="icon icon-xs" th:if="${s.estado.toString() == 'APROBADA'}">
+                                <use href="#i-check"/>
+                            </svg>
+                            <svg class="icon icon-xs" th:if="${s.estado.toString() == 'RECHAZADA'}">
+                                <use href="#i-x"/>
+                            </svg>
+                            <span th:text="${s.estado}"></span>
+                        </span>
+                    </td>
+                    <td th:text="${s.fechaAprobacionRechazo != null ? s.fechaAprobacionRechazo : '—'}"></td>
+                    <td>
+                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost">
+                            <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                            Ver
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card" th:if="${#lists.isEmpty(solicitudes)}">
+        <div class="empty">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <h2>Sin solicitudes registradas</h2>
+            <p th:if="${puedeCrear}">Registre la primera solicitud para iniciar el seguimiento.</p>
+            <p th:unless="${puedeCrear}">Aún no hay solicitudes en el sistema.</p>
+            <a th:if="${puedeCrear}" th:href="@{/solicitudes/nueva}" class="btn btn-primary"
+               style="margin-top:18px;">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                Crear solicitud
+            </a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

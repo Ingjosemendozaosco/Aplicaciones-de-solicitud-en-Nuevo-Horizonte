@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>No encontrado - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<div class="error-page">
+    <div class="error-card">
+        <div class="error-code">404</div>
+        <h1>Página no encontrada</h1>
+        <p class="subtitle">El recurso solicitado no existe o fue movido.</p>
+        <a th:href="@{/dashboard}" class="btn btn-primary" style="margin-top:22px;">
+            <svg class="icon"><use href="#i-grid"/></svg>
+            Ir al panel
+        </a>
+    </div>
+</div>
+</body>
+</html>
