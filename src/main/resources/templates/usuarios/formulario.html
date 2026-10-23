@@ -61,15 +61,38 @@
                            th:placeholder="${edicion} ? 'Dejar en blanco para conservar' : 'Contraseña inicial'"
                            th:required="${!edicion}">
                 </div>
-                <div class="field">
-                    <label for="rolNombre">
+                <div class="field full">
+                    <label>
                         <svg class="icon"><use href="#i-key"/></svg>
-                        Rol
+                        Roles (puede seleccionar varios)
                     </label>
-                    <select id="rolNombre" th:field="*{rolNombre}">
-                        <option value="">Sin rol</option>
-                        <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
+                    <div class="modulos-grid" style="margin-top:2px;">
+                        <label class="modulo-chip" th:each="r : ${roles}">
+                            <input type="checkbox" th:field="*{roles}" th:value="${r}">
+                            <span th:text="${r}"></span>
+                        </label>
+                    </div>
+                    <p class="form-hint" id="cargoPreview"></p>
+                </div>
+                <div class="field">
+                    <label for="tipoVigencia">
+                        <svg class="icon"><use href="#i-clock"/></svg>
+                        Vigencia de los roles
+                    </label>
+                    <select id="tipoVigencia" th:field="*{tipoVigencia}">
+                        <option value="DEFINITIVO">Definitivo</option>
+                        <option value="TEMPORAL">Temporal</option>
                     </select>
+                </div>
+                <div class="field" id="campoFechaFinRol" style="display:none;">
+                    <label for="fechaFinRol">
+                        <svg class="icon"><use href="#i-calendar"/></svg>
+                        Fecha fin del rol
+                    </label>
+                    <input id="fechaFinRol" type="date" th:field="*{fechaFinRol}">
+                    <small style="color:var(--muted);display:block;margin-top:.35rem;">
+                        El rol dejará de aplicar automáticamente en esa fecha.
+                    </small>
                 </div>
                 <div class="field full">
                     <label class="form-check">
@@ -92,5 +115,50 @@
         </form>
     </section>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tipo = document.getElementById('tipoVigencia');
+    const campo = document.getElementById('campoFechaFinRol');
+    const fecha = document.getElementById('fechaFinRol');
+    function actualizar() {
+        const temporal = tipo.value === 'TEMPORAL';
+        campo.style.display = temporal ? '' : 'none';
+        fecha.required = temporal;
+    }
+    tipo.addEventListener('change', actualizar);
+    actualizar();
+
+    const JERARQUIA = {'Gerencia':1,'Administración':2,'Area de Ventas':3,'Area de Producto':4};
+    const CARGOS = {
+        'Gerencia+Administración':'Gerente Administrativo',
+        'Area de Ventas+Area de Producto':'Gerente Comercial (Líder de Producto y Ventas)',
+        'Gerencia+Area de Ventas':'Director Comercial',
+        'Gerencia+Area de Producto':'Gerente de Producto (Product Manager)',
+        'Administración+Area de Ventas':'Administrador Comercial',
+        'Administración+Area de Producto':'Administrador de Operaciones y Productos',
+        'Gerencia+Administración+Area de Ventas':'Gerente Comercial y Administrativo',
+        'Gerencia+Administración+Area de Producto':'Gerente de Operaciones (COO)',
+        'Gerencia+Area de Ventas+Area de Producto':'Director de Negocio y Producto',
+        'Administración+Area de Ventas+Area de Producto':'Coordinador Operativo de Productos y Ventas',
+        'Gerencia+Administración+Area de Ventas+Area de Producto':'Gerente General (CEO / Director Ejecutivo)'
+    };
+    const preview = document.getElementById('cargoPreview');
+    function actualizarCargo() {
+        const marcados = Array.from(document.querySelectorAll('input[name="roles"]:checked')).map(c => c.value);
+        marcados.sort((a,b) => (JERARQUIA[a]||99) - (JERARQUIA[b]||99));
+        if (marcados.length === 0) {
+            preview.textContent = 'Seleccione al menos un rol.';
+        } else if (marcados.length === 1) {
+            preview.textContent = 'Cargo formal: Empleado (un solo rol).';
+        } else {
+            const clave = marcados.join('+');
+            const cargo = CARGOS[clave] || 'Empleado';
+            preview.textContent = 'Cargo formal: ' + cargo;
+        }
+    }
+    document.querySelectorAll('input[name="roles"]').forEach(c => c.addEventListener('change', actualizarCargo));
+    actualizarCargo();
+});
+</script>
 </body>
 </html>

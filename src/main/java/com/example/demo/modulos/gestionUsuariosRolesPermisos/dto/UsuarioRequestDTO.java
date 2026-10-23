@@ -1,5 +1,10 @@
 package com.example.demo.modulos.gestionUsuariosRolesPermisos.dto;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
+import java.util.List;
+
 public class UsuarioRequestDTO {
 
     private Long id;
@@ -7,7 +12,11 @@ public class UsuarioRequestDTO {
     private String email;
     private String password;
     private boolean activo = true;
-    private String rolNombre;
+    private List<String> roles;
+    private String tipoVigencia = "DEFINITIVO";
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate fechaFinRol;
 
     public Long getId() {
         return id;
@@ -49,11 +58,27 @@ public class UsuarioRequestDTO {
         this.activo = activo;
     }
 
-    public String getRolNombre() {
-        return rolNombre;
+    public List<String> getRoles() {
+        return roles;
     }
 
-    public void setRolNombre(String rolNombre) {
-        this.rolNombre = rolNombre;
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+
+    public String getTipoVigencia() {
+        return tipoVigencia;
+    }
+
+    public void setTipoVigencia(String tipoVigencia) {
+        this.tipoVigencia = tipoVigencia;
+    }
+
+    public LocalDate getFechaFinRol() {
+        return fechaFinRol;
+    }
+
+    public void setFechaFinRol(LocalDate fechaFinRol) {
+        this.fechaFinRol = fechaFinRol;
     }
 }

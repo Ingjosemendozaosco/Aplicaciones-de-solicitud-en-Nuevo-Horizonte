@@ -88,7 +88,7 @@ public class RolService {
         if (rol.isEsSistema()) {
             throw new IllegalArgumentException("No se puede eliminar un rol del sistema");
         }
-        if (usuarioRepository.countByRolesId(id) > 0) {
+        if (usuarioRepository.countByUsuarioRolesRolId(id) > 0) {
             throw new IllegalArgumentException("El rol tiene usuarios asignados");
         }
         rolRepository.delete(rol);

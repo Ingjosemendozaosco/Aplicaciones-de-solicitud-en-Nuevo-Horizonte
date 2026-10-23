@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi perfil - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container container--narrow">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-user"/></svg>
+                Mi cuenta
+            </span>
+            <h1>Mi perfil</h1>
+            <p class="subtitle">Tus datos, roles y accesos vigentes en el sistema.</p>
+        </div>
+    </div>
+
+    <section class="perfil-hero">
+        <div class="perfil-avatar" th:text="${#strings.substring(perfil.username, 0, 1)}"></div>
+        <div class="perfil-hero__info">
+            <div class="perfil-hero__top">
+                <h2 th:text="${perfil.username}"></h2>
+                <span class="badge"
+                      th:classappend="${perfil.activo} ? 'aprobada' : 'rechazada'"
+                      th:text="${perfil.activo ? 'Activo' : 'Inactivo'}"></span>
+            </div>
+            <p th:text="${perfil.email}"></p>
+            <div class="perfil-hero__meta">
+                <span>
+                    <svg class="icon"><use href="#i-building"/></svg>
+                    <span th:text="${cargo}"></span>
+                </span>
+                <span th:if="${perfil.fechaCreacion != null}">
+                    <svg class="icon"><use href="#i-calendar"/></svg>
+                    Miembro desde
+                    <span th:text="${perfil.fechaCreacion.toLocalDate()}"></span>
+                </span>
+            </div>
+            <div class="perfil-hero__roles" th:if="${!#lists.isEmpty(roles)}">
+                <span class="rol-chip perfil-hero__chip" th:each="r : ${roles}">
+                    <span class="rol-dot" th:style="|background:${r['color']}|"></span>
+                    <span th:text="${r['nombre']}"></span>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <div class="perfil-stats">
+        <article class="perfil-stat">
+            <strong th:text="${totalSolicitudes}">0</strong>
+            <span>Mis solicitudes</span>
+        </article>
+        <article class="perfil-stat">
+            <strong th:text="${totalPendientes}">0</strong>
+            <span>Pendientes</span>
+        </article>
+        <article class="perfil-stat">
+            <strong th:text="${totalAprobadas}">0</strong>
+            <span>Aprobadas</span>
+        </article>
+        <article class="perfil-stat">
+            <strong th:text="${totalModulos}">0</strong>
+            <span>Módulos con acceso</span>
+        </article>
+    </div>
+
+    <section class="card">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-shield"/></svg>
+                Datos de la cuenta
+            </h2>
+        </div>
+        <div class="detail-grid" style="margin-top:14px;">
+            <div class="item">
+                <div class="label">
+                    <svg class="icon"><use href="#i-user"/></svg>
+                    Usuario
+                </div>
+                <div class="value" th:text="${perfil.username}"></div>
+            </div>
+            <div class="item">
+                <div class="label">
+                    <svg class="icon"><use href="#i-file"/></svg>
+                    Correo
+                </div>
+                <div class="value" th:text="${perfil.email}"></div>
+            </div>
+            <div class="item">
+                <div class="label">
+                    <svg class="icon"><use href="#i-check-circle"/></svg>
+                    Estado
+                </div>
+                <div class="value" th:text="${perfil.activo ? 'Activo' : 'Inactivo'}"></div>
+            </div>
+            <div class="item">
+                <div class="label">
+                    <svg class="icon"><use href="#i-calendar"/></svg>
+                    Alta en el sistema
+                </div>
+                <div class="value"
+                     th:text="${perfil.fechaCreacion != null ? perfil.fechaCreacion.toLocalDate() : '-'}"></div>
+            </div>
+            <div class="item full">
+                <div class="label">
+                    <svg class="icon"><use href="#i-building"/></svg>
+                    Cargo formal
+                </div>
+                <div class="value" th:text="${cargo}"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-key"/></svg>
+                Roles y accesos
+            </h2>
+            <span class="table-count"
+                  th:text="|${#lists.size(roles)} roles · ${totalModulos} módulos|"></span>
+        </div>
+
+        <div class="perfil-roles" th:if="${!#lists.isEmpty(roles)}">
+            <article class="perfil-rol" th:each="r : ${roles}"
+                     th:style="|--rol-color:${r['color']};|">
+                <header>
+                    <span class="rol-dot" th:style="|background:${r['color']}|"></span>
+                    <div>
+                        <strong th:text="${r['nombre']}"></strong>
+                        <small th:text="|${#lists.size(r['permisos'])} módulos con acceso|"></small>
+                    </div>
+                </header>
+                <p th:if="${r['descripcion'] != null and !r['descripcion'].isBlank()}"
+                   th:text="${r['descripcion']}"></p>
+                <div class="perfil-modulos" th:if="${!#lists.isEmpty(r['permisos'])}">
+                    <span class="perfil-modulo" th:each="p : ${r['permisos']}">
+                        <i></i>
+                        <span th:text="${p['etiqueta']}"></span>
+                        <em th:text="${p['nivel']}"></em>
+                    </span>
+                </div>
+                <p class="form-hint" th:if="${#lists.isEmpty(r['permisos'])}">
+                    Sin permisos vigentes en este rol.
+                </p>
+            </article>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(roles)}">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-key"/></svg>
+            </div>
+            <h2>Sin roles vigentes</h2>
+            <p>Tu cuenta no tiene roles activos. Contacta a Gerencia para revisar tus accesos.</p>
+        </div>
+    </section>
+
+    <section class="card card--table" th:if="${!#lists.isEmpty(recientes)}">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-clock"/></svg>
+                Mis solicitudes recientes
+            </h2>
+            <a th:href="@{/solicitudes}" class="btn btn-ghost btn-sm">Ver todas</a>
+        </div>
+        <div class="table-wrap">
+            <table class="solicitudes-table" style="min-width:0;">
+                <thead>
+                <tr>
+                    <th>N.º</th>
+                    <th>Tipo</th>
+                    <th>Recurso</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${recientes}"
+                    th:classappend="${s.estado.toString() == 'PENDIENTE'} ? 'fila-nueva' : ''">
+                    <td class="cell-num" th:text="${s.numeroSolicitud}"></td>
+                    <td>
+                        <span class="tipo-pill"
+                              th:classappend="${s.tipoSolicitud != null && s.tipoSolicitud.toString() == 'ACCESO'} ? 'tipo-pill--acceso' : 'tipo-pill--info'"
+                              th:text="${s.tipoSolicitud != null && s.tipoSolicitud.toString() == 'ACCESO' ? 'Acceso' : 'Información'}"></span>
+                    </td>
+                    <td class="cell-recurso" th:text="${s.recursoModulo}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${#strings.toLowerCase(s.estado.toString())}"
+                              th:text="${s.estado}"></span>
+                    </td>
+                    <td th:text="${s.fechaSolicitud}"></td>
+                    <td class="cell-actions">
+                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost btn-sm">
+                            Ver
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2 class="card-title">
+            <svg class="icon"><use href="#i-grid"/></svg>
+            Accesos rápidos
+        </h2>
+        <div class="perfil-acciones">
+            <a th:href="@{/solicitudes}" class="perfil-accion">
+                <svg class="icon"><use href="#i-list"/></svg>
+                Ver mis solicitudes
+            </a>
+            <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')"
+               th:href="@{/solicitudes/nueva}" class="perfil-accion">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                Nueva solicitud
+            </a>
+            <a th:href="@{/notificaciones}" class="perfil-accion">
+                <svg class="icon"><use href="#i-bell"/></svg>
+                Notificaciones
+            </a>
+            <a sec:authorize="hasAnyRole('Administración','Gerencia')"
+               th:href="@{/disponibles}" class="perfil-accion">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                Documentos y módulos
+            </a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,9 +1,11 @@
 package com.example.demo.modulos.solicitudes.dto;
 
 import com.example.demo.modulos.solicitudes.entity.EstadoSolicitud;
+import com.example.demo.modulos.solicitudes.entity.TipoSolicitud;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class SolicitudResponseDTO {
 
@@ -11,10 +13,25 @@ public class SolicitudResponseDTO {
     private String numeroSolicitud;
     private String nombreSolicitante;
     private LocalDate fechaSolicitud;
+    private TipoSolicitud tipoSolicitud;
+    private LocalDate fechaInicioAcceso;
+    private LocalDate fechaFinAcceso;
+    private List<String> detallesAcceso;
+    private List<DetalleModuloDTO> detalles;
+    private List<RolColorDTO> rolesSolicitante;
+    private boolean permanente;
+    private List<String> propuestaDetalles;
+    private Boolean propuestaPermanente;
+    private LocalDate propuestaFechaInicio;
+    private LocalDate propuestaFechaFin;
+    private String notaPropuesta;
+    private String nombreInforme;
     private String recursoModulo;
+    private String cargoSolicitante;
     private String motivo;
     private String responsableAprobacion;
     private EstadoSolicitud estado;
+    private boolean visto;
     private LocalDateTime fechaAprobacionRechazo;
     private String comentarioAdmin;
     private String areaSolicitante;
@@ -56,6 +73,130 @@ public class SolicitudResponseDTO {
         this.fechaSolicitud = fechaSolicitud;
     }
 
+    public TipoSolicitud getTipoSolicitud() {
+        return tipoSolicitud;
+    }
+
+    public void setTipoSolicitud(TipoSolicitud tipoSolicitud) {
+        this.tipoSolicitud = tipoSolicitud;
+    }
+
+    public LocalDate getFechaFinAcceso() {
+        return fechaFinAcceso;
+    }
+
+    public void setFechaFinAcceso(LocalDate fechaFinAcceso) {
+        this.fechaFinAcceso = fechaFinAcceso;
+    }
+
+    public LocalDate getFechaInicioAcceso() {
+        return fechaInicioAcceso;
+    }
+
+    public void setFechaInicioAcceso(LocalDate fechaInicioAcceso) {
+        this.fechaInicioAcceso = fechaInicioAcceso;
+    }
+
+    public String getCargoSolicitante() {
+        return cargoSolicitante;
+    }
+
+    public void setCargoSolicitante(String cargoSolicitante) {
+        this.cargoSolicitante = cargoSolicitante;
+    }
+
+    public List<String> getDetallesAcceso() {
+        return detallesAcceso;
+    }
+
+    public void setDetallesAcceso(List<String> detallesAcceso) {
+        this.detallesAcceso = detallesAcceso;
+    }
+
+    public List<DetalleModuloDTO> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<DetalleModuloDTO> detalles) {
+        this.detalles = detalles;
+    }
+
+    public List<RolColorDTO> getRolesSolicitante() {
+        return rolesSolicitante;
+    }
+
+    public void setRolesSolicitante(List<RolColorDTO> rolesSolicitante) {
+        this.rolesSolicitante = rolesSolicitante;
+    }
+
+    public boolean isPermanente() {
+        return permanente;
+    }
+
+    public void setPermanente(boolean permanente) {
+        this.permanente = permanente;
+    }
+
+    public List<String> getPropuestaDetalles() {
+        return propuestaDetalles;
+    }
+
+    public void setPropuestaDetalles(List<String> propuestaDetalles) {
+        this.propuestaDetalles = propuestaDetalles;
+    }
+
+    public Boolean getPropuestaPermanente() {
+        return propuestaPermanente;
+    }
+
+    public void setPropuestaPermanente(Boolean propuestaPermanente) {
+        this.propuestaPermanente = propuestaPermanente;
+    }
+
+    public LocalDate getPropuestaFechaInicio() {
+        return propuestaFechaInicio;
+    }
+
+    public void setPropuestaFechaInicio(LocalDate propuestaFechaInicio) {
+        this.propuestaFechaInicio = propuestaFechaInicio;
+    }
+
+    public LocalDate getPropuestaFechaFin() {
+        return propuestaFechaFin;
+    }
+
+    public void setPropuestaFechaFin(LocalDate propuestaFechaFin) {
+        this.propuestaFechaFin = propuestaFechaFin;
+    }
+
+    public String getNotaPropuesta() {
+        return notaPropuesta;
+    }
+
+    public void setNotaPropuesta(String notaPropuesta) {
+        this.notaPropuesta = notaPropuesta;
+    }
+
+    public String getNombreInforme() {
+        return nombreInforme;
+    }
+
+    public void setNombreInforme(String nombreInforme) {
+        this.nombreInforme = nombreInforme;
+    }
+
+    public String getTipoSolicitudLegible() {
+        return tipoSolicitud == TipoSolicitud.ACCESO
+                ? "Solicitud de acceso a módulos"
+                : "Solicitud de información";
+    }
+
+    public String getRecursoModuloEtiqueta() {
+        return tipoSolicitud == TipoSolicitud.ACCESO
+                ? "Módulos solicitados"
+                : "Recurso o información solicitada";
+    }
+
     public String getRecursoModulo() {
         return recursoModulo;
     }
@@ -86,6 +227,14 @@ public class SolicitudResponseDTO {
 
     public void setEstado(EstadoSolicitud estado) {
         this.estado = estado;
+    }
+
+    public boolean isVisto() {
+        return visto;
+    }
+
+    public void setVisto(boolean visto) {
+        this.visto = visto;
     }
 
     public LocalDateTime getFechaAprobacionRechazo() {

@@ -16,6 +16,15 @@
         Volver a solicitudes
     </a>
 
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        <span th:text="${error}"></span>
+    </div>
+
     <section class="card">
         <div class="detail-head">
             <div>
@@ -25,19 +34,83 @@
                     <span th:text="${solicitud.numeroSolicitud}"></span>
                 </span>
             </div>
-            <span class="badge"
-                  th:classappend="${#strings.toLowerCase(solicitud.estado.toString())}">
-                <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'PENDIENTE'}">
-                    <use href="#i-clock"/>
-                </svg>
-                <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'APROBADA'}">
-                    <use href="#i-check"/>
-                </svg>
-                <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'RECHAZADA'}">
-                    <use href="#i-x"/>
-                </svg>
-                <span th:text="${solicitud.estado}"></span>
-            </span>
+            <div class="detail-head-actions">
+                <span class="badge"
+                      th:classappend="${#strings.toLowerCase(solicitud.estado.toString())}">
+                    <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'PENDIENTE'}">
+                        <use href="#i-clock"/>
+                    </svg>
+                    <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'EN_REVISION'}">
+                        <use href="#i-clock"/>
+                    </svg>
+                    <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'APROBADA'}">
+                        <use href="#i-check"/>
+                    </svg>
+                    <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'RECHAZADA'}">
+                        <use href="#i-x"/>
+                    </svg>
+                    <span th:text="${solicitud.estado}"></span>
+                </span>
+                <a th:if="${solicitud.estado.toString() == 'APROBADA'}"
+                   th:href="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/constancia'}"
+                   target="_blank" class="btn btn-secondary btn-sm">
+                    <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                    Constancia
+                </a>
+            </div>
+        </div>
+
+        <div class="timeline"
+             th:with="enRevision=${solicitud.estado.toString() == 'EN_REVISION'},
+                      decidida=${solicitud.estado.toString() == 'APROBADA' || solicitud.estado.toString() == 'RECHAZADA'},
+                      aprobada=${solicitud.estado.toString() == 'APROBADA'},
+                      tienePropuesta=${solicitud.propuestaDetalles != null && !solicitud.propuestaDetalles.isEmpty()}">
+            <div class="tl-item done">
+                <span class="tl-dot">
+                    <svg class="icon"><use href="#i-check"/></svg>
+                </span>
+                <div class="tl-body">
+                    <strong>Solicitud creada</strong>
+                    <span th:text="|${solicitud.fechaSolicitud} · ${solicitud.nombreSolicitante}|"></span>
+                </div>
+            </div>
+            <div class="tl-item" th:classappend="${(enRevision || decidida) ? 'done' : 'current'}">
+                <span class="tl-dot">
+                    <svg class="icon"><use href="#i-clock"/></svg>
+                </span>
+                <div class="tl-body">
+                    <strong>Revisión</strong>
+                    <span th:if="${enRevision}">Propuesta enviada al solicitante para su aceptación.</span>
+                    <span th:if="${!enRevision && !decidida}">En espera de revisión por administración.</span>
+                    <span th:if="${!enRevision && decidida}">Revisada por administración.</span>
+                </div>
+            </div>
+            <div class="tl-item" th:classappend="${tienePropuesta ? 'done' : 'pending'}">
+                <span class="tl-dot">
+                    <svg class="icon"><use href="#i-file"/></svg>
+                </span>
+                <div class="tl-body">
+                    <strong>Contrapropuesta</strong>
+                    <span th:if="${tienePropuesta}">Administración propuso una configuración alternativa.</span>
+                    <span th:unless="${tienePropuesta}">No se envió contrapropuesta.</span>
+                </div>
+            </div>
+            <div class="tl-item" th:classappend="${!decidida ? 'pending' : (aprobada ? 'done' : 'rejected')}">
+                <span class="tl-dot">
+                    <svg class="icon" th:if="${aprobada}"><use href="#i-check"/></svg>
+                    <svg class="icon" th:if="${!aprobada}"><use href="#i-clock"/></svg>
+                </span>
+                <div class="tl-body">
+                    <strong>Decisión</strong>
+                    <span th:if="${!decidida}">Pendiente de decisión.</span>
+                    <span th:if="${decidida && solicitud.fechaAprobacionRechazo != null}"
+                          th:text="|${solicitud.estado} · ${#strings.substring(solicitud.fechaAprobacionRechazo.toString(), 0, 10)}|"></span>
+                    <span th:if="${decidida && solicitud.fechaAprobacionRechazo == null}"
+                          th:text="${solicitud.estado}"></span>
+                    <span th:if="${decidida && solicitud.comentarioAdmin != null && !solicitud.comentarioAdmin.isBlank()}"
+                          th:text="|Observación: ${solicitud.comentarioAdmin}|"></span>
+                </div>
+            </div>
         </div>
 
         <div class="detail-grid">
@@ -71,10 +144,64 @@
             </div>
             <div class="item">
                 <div class="label">
+                    <svg class="icon"><use href="#i-check-circle"/></svg>
+                    Tipo de solicitud
+                </div>
+                <div class="value" th:text="${solicitud.tipoSolicitudLegible}"></div>
+            </div>
+            <div class="item" th:if="${solicitud.cargoSolicitante != null and !solicitud.cargoSolicitante.isBlank()}">
+                <div class="label">
+                    <svg class="icon"><use href="#i-shield"/></svg>
+                    Cargo formal del solicitante
+                </div>
+                <div class="value" th:text="${solicitud.cargoSolicitante}"></div>
+            </div>
+            <div class="item full" th:if="${!#lists.isEmpty(solicitud.rolesSolicitante)}">
+                <div class="label">
+                    <svg class="icon"><use href="#i-key"/></svg>
+                    Roles del solicitante
+                </div>
+                <div class="value roles-actuales">
+                    <span class="rol-chip" th:each="r : ${solicitud.rolesSolicitante}"
+                          th:style="'background:' + ${r.color} + '22;color:' + ${r.color} + ';border-color:' + ${r.color} + '55'">
+                        <span class="rol-dot" th:style="'background:' + ${r.color}"></span>
+                        <span th:text="${r.nombre}"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="item">
+                <div class="label">
                     <svg class="icon"><use href="#i-layer"/></svg>
-                    Recurso o módulo solicitado
+                    <span th:text="${solicitud.recursoModuloEtiqueta}"></span>
                 </div>
                 <div class="value" th:text="${solicitud.recursoModulo}"></div>
+            </div>
+            <div class="item full" th:if="${solicitud.tipoSolicitud != null && solicitud.tipoSolicitud.toString() == 'ACCESO'}">
+                <div class="label">
+                    <svg class="icon"><use href="#i-layer"/></svg>
+                    Módulos a los que necesita acceso
+                </div>
+                <div class="value modulos-grid" style="margin-top:.4rem;">
+                    <span class="modulo-chip" th:each="d : ${solicitud.detalles}"
+                          th:text="${d.etiqueta + ' (' + d.nivelLegible + ')'}"></span>
+                </div>
+            </div>
+            <div class="item" th:if="${solicitud.tipoSolicitud != null && solicitud.tipoSolicitud.toString() == 'ACCESO'}">
+                <div class="label">
+                    <svg class="icon"><use href="#i-clock"/></svg>
+                    Vigencia del acceso
+                </div>
+                <div class="value">
+                    <span th:if="${solicitud.permanente}">Permanente (sin fecha de fin)</span>
+                    <span th:unless="${solicitud.permanente}">
+                        <span th:if="${solicitud.fechaInicioAcceso != null}"
+                              th:text="'Inicio: ' + ${solicitud.fechaInicioAcceso}"></span>
+                        <span th:if="${solicitud.fechaFinAcceso != null}"
+                              th:text="' · Fin: ' + ${solicitud.fechaFinAcceso}"></span>
+                        <span th:if="${solicitud.fechaFinAcceso == null}"
+                              class="muted"> · Fin: 30 días después del inicio (automático)</span>
+                    </span>
+                </div>
             </div>
             <div class="item">
                 <div class="label">
@@ -124,10 +251,189 @@
                     </div>
                 </div>
             </div>
+            <div class="item full" th:if="${solicitud.nombreInforme != null}">
+                <div class="label">
+                    <svg class="icon"><use href="#i-file"/></svg>
+                    Informe entregado
+                </div>
+                <div class="value">
+                    <a th:href="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/informe'}" target="_blank"
+                       class="btn btn-primary" style="display:inline-flex;align-items:center;gap:.4rem;">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                        <span th:text="${solicitud.nombreInforme}"></span>
+                    </a>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="card" th:if="${puedeDecidir}">
+    <section class="card" th:if="${solicitud.estado.toString() == 'EN_REVISION'}">
+        <h2 class="card-title">
+            <svg class="icon"><use href="#i-clock"/></svg>
+            Propuesta del administrador
+        </h2>
+        <div class="modulos-grid">
+            <span class="modulo-chip" th:each="d : ${solicitud.propuestaDetalles}" th:text="${d}"></span>
+        </div>
+        <p class="form-hint" style="margin-top:.8rem;">
+            Vigencia propuesta:
+            <strong th:if="${solicitud.propuestaPermanente}">Permanente (sin fecha de fin)</strong>
+            <strong th:unless="${solicitud.propuestaPermanente}"
+                    th:text="'Desde ' + ${solicitud.propuestaFechaInicio} + ' hasta ' + ${solicitud.propuestaFechaFin}"></strong>
+        </p>
+        <p class="form-hint" th:if="${solicitud.notaPropuesta != null and !solicitud.notaPropuesta.isBlank()}">
+            Observaciones: <span th:text="${solicitud.notaPropuesta}"></span>
+        </p>
+        <div class="actions" th:if="${esSolicitante}">
+            <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/propuesta/aceptar'}" method="post">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-check"/></svg>
+                    Aceptar propuesta
+                </button>
+            </form>
+            <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/propuesta/rechazar'}" method="post">
+                <button type="submit" class="btn btn-secondary">
+                    <svg class="icon"><use href="#i-x"/></svg>
+                    Rechazar propuesta
+                </button>
+            </form>
+        </div>
+        <p class="form-hint" th:unless="${esSolicitante}">
+            Esperando la respuesta del solicitante.
+        </p>
+    </section>
+
+    <section class="card" th:if="${puedeDecidir && solicitud.tipoSolicitud.toString() == 'ACCESO'}">
+        <div class="mod-head">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                Accesos del solicitante
+            </h2>
+            <button type="button" class="btn btn-secondary" id="btnToggleModulos">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                Módulos actuales
+            </button>
+        </div>
+
+        <div id="panelModulos" class="oculto" style="margin-top:1rem;">
+            <div class="modulos-actuales-grid">
+                <div class="modulo-card" th:each="m : ${modulosActuales}" th:if="${m.tieneAcceso}">
+                    <div class="modulo-card-head">
+                        <span class="color-bar" th:style="'background:' + ${m.gradiente}"></span>
+                        <strong th:text="${m.etiqueta}"></strong>
+                        <span class="badge"
+                              th:classappend="${m.nivel == 'EDICION' ? 'aprobada' : 'pendiente'}"
+                              th:text="${m.nivelLegible}"></span>
+                    </div>
+                    <div class="rol-permiso" th:each="r : ${m.roles}">
+                        <span class="rol-dot" th:style="'background:' + ${r.color}"></span>
+                        <span class="rol-nombre" th:text="${r.nombre}"></span>
+                        <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/modulos/nivel'}"
+                              method="post" class="inline-form">
+                            <input type="hidden" name="idPermiso" th:value="${r.idPermiso}">
+                            <select name="nivel">
+                                <option value="LECTURA" th:selected="${r.nivel == 'LECTURA'}">Lectura</option>
+                                <option value="EDICION" th:selected="${r.nivel == 'EDICION'}">Edición</option>
+                            </select>
+                            <button type="submit" class="btn btn-ghost btn-sm">Cambiar</button>
+                        </form>
+                        <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/modulos/revocar'}"
+                              method="post" class="inline-form">
+                            <input type="hidden" name="idPermiso" th:value="${r.idPermiso}">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);">
+                                Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <h3 class="mod-subtitle">Añadir acceso a un rol</h3>
+            <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/modulos/agregar'}"
+                  method="post" class="grid">
+                <div class="field">
+                    <label>Rol del solicitante</label>
+                    <select name="idRol" required>
+                        <option value="">Seleccione un rol</option>
+                        <option th:each="r : ${rolesSolicitante}" th:value="${r.idRol}"
+                                th:text="${r.nombre}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Módulo sin acceso</label>
+                    <select name="modulo" required>
+                        <option value="">Seleccione un módulo</option>
+                        <option th:each="m : ${modulosActuales}" th:if="${!m.tieneAcceso}"
+                                th:value="${m.modulo}" th:text="${m.etiqueta}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Nivel</label>
+                    <select name="nivel">
+                        <option value="LECTURA">Lectura</option>
+                        <option value="EDICION">Edición</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <button type="submit" class="btn btn-primary">
+                        <svg class="icon"><use href="#i-plus"/></svg>
+                        Añadir acceso
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="card"
+             th:if="${puedeDecidir && solicitud.tipoSolicitud.toString() == 'ACCESO' && (solicitud.estado.toString() == 'PENDIENTE' || solicitud.estado.toString() == 'EN_REVISION')}">
+        <h2 class="card-title">
+            <svg class="icon"><use href="#i-edit"/></svg>
+            Proponer una configuración
+        </h2>
+        <p class="form-hint" style="margin-bottom:1rem;">
+            Ajusta los módulos, niveles y la vigencia. El solicitante recibirá la propuesta y deberá aceptarla o rechazarla.
+        </p>
+        <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/propuesta'}"
+              method="post" th:object="${propuesta}">
+            <div class="propuesta-modulos">
+                <div class="propuesta-row" th:each="d : ${solicitud.detalles}">
+                    <span class="propuesta-nombre" th:text="${d.etiqueta}"></span>
+                    <select th:name="'niveles[' + ${d.modulo} + ']'">
+                        <option value="LECTURA" th:selected="${d.nivel == 'LECTURA'}">Lectura</option>
+                        <option value="EDICION" th:selected="${d.nivel == 'EDICION'}">Edición</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid" style="margin-top:1rem;">
+                <div class="field full">
+                    <label class="form-check">
+                        <input type="checkbox" th:field="*{permanente}" id="propPermanente">
+                        Propuesta permanente (sin fecha de fin)
+                    </label>
+                </div>
+                <div class="field">
+                    <label for="propFechaInicio">Fecha de inicio</label>
+                    <input id="propFechaInicio" type="date" th:field="*{fechaInicio}">
+                </div>
+                <div class="field" id="propFechaFin">
+                    <label for="propFechaFinInput">Fecha de fin</label>
+                    <input id="propFechaFinInput" type="date" th:field="*{fechaFin}">
+                </div>
+                <div class="field full">
+                    <label for="notaPropuesta">Observaciones (opcional)</label>
+                    <textarea id="notaPropuesta" th:field="*{nota}"
+                              placeholder="Ej: se sugiere lectura por ahora; edición al completar la capacitación"></textarea>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-send"/></svg>
+                    Enviar propuesta al solicitante
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card" th:if="${puedeDecidir && (solicitud.estado.toString() == 'PENDIENTE' || solicitud.estado.toString() == 'EN_REVISION')}">
         <h2 class="card-title">
             <svg class="icon"><use href="#i-shield"/></svg>
             Decisión de la solicitud
@@ -145,6 +451,23 @@
                         <option value="APROBADA">APROBADA</option>
                         <option value="RECHAZADA">RECHAZADA</option>
                     </select>
+                </div>
+                <div class="field full" th:if="${solicitud.tipoSolicitud.toString() == 'INFORMACION'}">
+                    <label for="idDocumento">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                        Documento del informe
+                    </label>
+                    <select id="idDocumento" th:field="*{idDocumento}">
+                        <option value="">No disponible / aprobar sin informe</option>
+                        <option th:each="doc : ${documentos}" th:value="${doc.id}"
+                                th:text="${doc.nombre + (doc.categoria != null ? ' · ' + doc.categoria : '')}"></option>
+                    </select>
+                    <p class="form-hint" th:if="${#lists.isEmpty(documentos)}">
+                        Gerencia aún no ha publicado documentos. Puedes aprobar indicando que no está disponible.
+                    </p>
+                    <p class="form-hint" th:unless="${#lists.isEmpty(documentos)}">
+                        Se preselecciona el documento solicitado. Si no está disponible, elige la primera opción.
+                    </p>
                 </div>
                 <div class="field full">
                     <label for="comentario">
@@ -167,5 +490,26 @@
         </form>
     </section>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('btnToggleModulos');
+    const panel = document.getElementById('panelModulos');
+    if (btn && panel) {
+        btn.addEventListener('click', function () {
+            panel.classList.toggle('oculto');
+        });
+    }
+    const propPerm = document.getElementById('propPermanente');
+    const propFin = document.getElementById('propFechaFin');
+    function actualizarProp() {
+        if (!propPerm || !propFin) return;
+        propFin.style.display = propPerm.checked ? 'none' : '';
+    }
+    if (propPerm) {
+        propPerm.addEventListener('change', actualizarProp);
+        actualizarProp();
+    }
+});
+</script>
 </body>
 </html>

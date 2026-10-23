@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Disponibles - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-grid"/></svg>
+                Catálogo del sistema
+            </span>
+            <h1>Documentos y módulos disponibles</h1>
+            <p class="subtitle">
+                Todos los documentos de Gerencia y todos los módulos del sistema, con las áreas que tienen acceso.
+            </p>
+        </div>
+    </div>
+
+    <div class="catalogo-stats">
+        <article class="catalogo-stat">
+            <strong th:text="${#lists.size(documentos)}">0</strong>
+            <span>Documentos</span>
+        </article>
+        <article class="catalogo-stat">
+            <strong th:text="${documentosActivos}">0</strong>
+            <span>Documentos activos</span>
+        </article>
+        <article class="catalogo-stat">
+            <strong th:text="${#lists.size(modulos)}">0</strong>
+            <span>Módulos del sistema</span>
+        </article>
+        <article class="catalogo-stat">
+            <strong th:text="${totalAreas}">0</strong>
+            <span>Áreas con acceso</span>
+        </article>
+    </div>
+
+    <section class="card">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-file"/></svg>
+                Documentos disponibles
+            </h2>
+            <span class="table-count"
+                  th:text="|${#lists.size(documentos)} documentos|"></span>
+        </div>
+
+        <div class="catalogo-docs" th:if="${!#lists.isEmpty(documentos)}">
+            <article class="catalogo-doc" th:each="d : ${documentos}"
+                     th:classappend="${!d.activo} ? 'catalogo-doc--inactivo' : ''">
+                <div class="catalogo-doc__top">
+                    <span class="catalogo-doc__cat"
+                          th:text="${d.categoria != null ? d.categoria : 'Sin categoría'}"></span>
+                    <span class="badge"
+                          th:classappend="${d.activo} ? 'aprobada' : 'rechazada'"
+                          th:text="${d.activo ? 'Activo' : 'Inactivo'}"></span>
+                </div>
+                <h3 th:text="${d.nombre}"></h3>
+                <p th:if="${d.descripcion != null}" th:text="${d.descripcion}"></p>
+                <div class="catalogo-doc__meta">
+                    <span th:if="${d.subidoPor != null}" th:text="|Publicado por ${d.subidoPor}|"></span>
+                    <span th:text="${#strings.substring(d.fechaSubida.toString(), 0, 10)}"></span>
+                </div>
+                <a th:href="@{'/disponibles/' + ${d.id} + '/archivo'}" target="_blank">
+                    <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                    Ver archivo
+                </a>
+            </article>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(documentos)}">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <h2>Sin documentos disponibles</h2>
+            <p>Gerencia aún no ha publicado documentos para los informes.</p>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-users"/></svg>
+                Módulos por área
+            </h2>
+            <span class="table-count">Cada área con su color</span>
+        </div>
+
+        <div class="areas-grid" th:if="${!#lists.isEmpty(areas)}">
+            <article class="area-card" th:each="a : ${areas}"
+                     th:style="|--area-color:${a.color};|">
+                <header>
+                    <span class="area-dot"></span>
+                    <strong th:text="${a.nombre}"></strong>
+                    <span class="area-count" th:text="|${#lists.size(a.modulos)} módulos|"></span>
+                </header>
+                <ul>
+                    <li th:each="mod : ${a.modulos}" th:text="${mod}"></li>
+                </ul>
+            </article>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(areas)}">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-users"/></svg>
+            </div>
+            <h2>Sin módulos asignados</h2>
+            <p>Aún no hay permisos vigentes asociados a las áreas.</p>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                Todos los módulos del sistema
+            </h2>
+            <span class="table-count" th:text="|${#lists.size(modulos)} módulos|"></span>
+        </div>
+
+        <div class="modulos-disp-grid">
+            <article class="modulo-disp" th:each="m : ${modulos}"
+                     th:classappend="${#lists.isEmpty(m.roles)} ? 'modulo-disp--empty' : ''">
+                <span class="modulo-disp__bar" th:style="|background:${m.gradiente};|"></span>
+                <div class="modulo-disp__body">
+                    <header>
+                        <strong th:text="${m.etiqueta}"></strong>
+                        <small th:if="${!#lists.isEmpty(m.roles)}"
+                               th:text="|${#lists.size(m.roles)} área(s)|"></small>
+                        <small th:if="${#lists.isEmpty(m.roles)}">Sin áreas</small>
+                    </header>
+                    <div class="catalogo-areas" th:if="${!#lists.isEmpty(m.roles)}">
+                        <span class="area-chip" th:each="r : ${m.roles}"
+                              th:style="|--area-color:${r.color};|">
+                            <i class="area-dot"></i>
+                            <span th:text="${r.nombre}"></span>
+                            <em th:text="${r.nivelLegible}"></em>
+                        </span>
+                    </div>
+                    <p class="form-hint" th:if="${#lists.isEmpty(m.roles)}">
+                        Ningún área tiene este módulo asignado.
+                    </p>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+</body>
+</html>

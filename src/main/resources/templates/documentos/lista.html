@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Documentos - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-file"/></svg>
+                Gerencia
+            </span>
+            <h1>Documentos para informes</h1>
+            <p class="subtitle">Publica los documentos que Administración podrá entregar en las solicitudes de información.</p>
+        </div>
+    </div>
+
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        <span th:text="${error}"></span>
+    </div>
+
+    <section class="card">
+        <h2 class="card-title">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Publicar documento
+        </h2>
+        <form th:action="@{/documentos}" method="post" enctype="multipart/form-data">
+            <div class="grid">
+                <div class="field">
+                    <label for="nombre">Nombre del documento</label>
+                    <input id="nombre" type="text" name="nombre" required maxlength="150"
+                           placeholder="Ej: Informe de ventas mensual">
+                </div>
+                <div class="field">
+                    <label for="categoria">Categoría</label>
+                    <select id="categoria" name="categoria">
+                        <option value="">Sin categoría</option>
+                        <option>Contratos</option>
+                        <option>Facturas</option>
+                        <option>Presupuestos</option>
+                        <option>Informes</option>
+                        <option>Actas</option>
+                        <option>Políticas</option>
+                        <option>Otros</option>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label for="descripcion">Descripción</label>
+                    <input id="descripcion" type="text" name="descripcion" maxlength="255"
+                           placeholder="Breve descripción para identificarlo">
+                </div>
+                <div class="field full">
+                    <label for="archivo">Archivo</label>
+                    <input id="archivo" type="file" name="archivo" required
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif,.webp">
+                    <p class="form-hint">PDF, Word, Excel, TXT o imágenes. Máx. 10 MB.</p>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-save"/></svg>
+                    Publicar documento
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card card--table">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                Catálogo de documentos
+            </h2>
+            <span class="table-count" th:text="|${#lists.size(documentos)} documentos|"></span>
+        </div>
+
+        <div class="table-wrap" th:if="${!#lists.isEmpty(documentos)}">
+            <table class="solicitudes-table">
+                <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Categoría</th>
+                    <th>Archivo</th>
+                    <th>Publicado por</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : ${documentos}"
+                    th:classappend="${!d.activo} ? 'doc-inactivo' : ''">
+                    <td>
+                        <strong th:text="${d.nombre}"></strong>
+                        <small th:if="${d.descripcion != null}" th:text="${d.descripcion}"
+                               style="display:block;color:var(--muted);font-size:11.5px;"></small>
+                    </td>
+                    <td th:text="${d.categoria != null ? d.categoria : 'Sin categoría'}"></td>
+                    <td>
+                        <a th:href="@{'/documentos/' + ${d.id} + '/archivo'}" target="_blank"
+                           th:text="${d.nombreArchivo}"></a>
+                    </td>
+                    <td th:text="${d.subidoPor}"></td>
+                    <td class="cell-date"
+                        th:text="${#strings.substring(d.fechaSubida.toString(), 0, 10)}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${d.activo} ? 'aprobada' : 'rechazada'"
+                              th:text="${d.activo ? 'Activo' : 'Inactivo'}"></span>
+                    </td>
+                    <td class="cell-actions">
+                        <div class="actions-cell">
+                            <form th:action="@{'/documentos/' + ${d.id} + '/estado'}" method="post"
+                                  style="display:inline;">
+                                <input type="hidden" name="activo" th:value="${!d.activo}">
+                                <button type="submit" class="btn btn-ghost btn-sm"
+                                        th:text="${d.activo ? 'Desactivar' : 'Activar'}"></button>
+                            </form>
+                            <form th:action="@{'/documentos/' + ${d.id} + '/eliminar'}" method="post"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('¿Retirar definitivamente este documento del catálogo?');">
+                                <button type="submit" class="btn btn-ghost btn-sm btn-ghost--danger">Retirar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(documentos)}">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <h2>Sin documentos publicados</h2>
+            <p>Publica el primer documento para que Administración pueda usarlo en los informes.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

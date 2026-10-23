@@ -11,16 +11,16 @@
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
 <main class="container">
-    <div class="page-head">
+    <div class="page-head page-head--solicitudes">
         <div>
             <span class="eyebrow">
                 <svg class="icon"><use href="#i-list"/></svg>
-                Bandeja
+                Bandeja de solicitudes
             </span>
             <h1>Solicitudes</h1>
-            <p class="subtitle">Registro, seguimiento y decisión de solicitudes.</p>
+            <p class="subtitle">Registro, seguimiento y decisión de solicitudes del sistema.</p>
         </div>
-        <a th:if="${puedeCrear}" th:href="@{/solicitudes/nueva}" class="btn btn-primary">
+        <a th:if="${puedeCrear}" th:href="@{/solicitudes/nueva}" class="btn btn-primary btn-lg">
             <svg class="icon"><use href="#i-plus"/></svg>
             Nueva solicitud
         </a>
@@ -31,35 +31,126 @@
         <span th:text="${mensaje}"></span>
     </div>
 
+    <div class="stats-row" th:if="${!#lists.isEmpty(solicitudes)}">
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--blue"><svg class="icon"><use href="#i-list"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${total}"></span>
+                <span class="stat-label">Total</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--warn"><svg class="icon"><use href="#i-clock"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalPendientes}"></span>
+                <span class="stat-label">Pendientes</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--info"><svg class="icon"><use href="#i-file"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalRevision}"></span>
+                <span class="stat-label">En revisión</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--success"><svg class="icon"><use href="#i-check"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalAprobadas}"></span>
+                <span class="stat-label">Aprobadas</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--danger"><svg class="icon"><use href="#i-x"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalRechazadas}"></span>
+                <span class="stat-label">Rechazadas</span>
+            </div>
+        </div>
+    </div>
+
     <section class="card card--table" th:if="${!#lists.isEmpty(solicitudes)}">
+        <div class="table-toolbar">
+            <div class="filter-tabs" id="filtrosSolicitudes">
+                <button type="button" class="filter-tab active" data-filter="TODAS">Todas</button>
+                <button type="button" class="filter-tab" data-filter="PENDIENTE">Pendientes</button>
+                <button type="button" class="filter-tab" data-filter="EN_REVISION">En revisión</button>
+                <button type="button" class="filter-tab" data-filter="APROBADA">Aprobadas</button>
+                <button type="button" class="filter-tab" data-filter="RECHAZADA">Rechazadas</button>
+            </div>
+            <div class="table-tools">
+                <span class="nueva-leyenda" title="Las solicitudes pendientes se muestran primero">
+                    <i></i> Nueva pendiente
+                </span>
+                <div class="search-box">
+                    <svg class="icon"><use href="#i-search"/></svg>
+                    <input id="buscarSolicitudes" type="search"
+                           placeholder="Buscar N.º, solicitante, módulo..." autocomplete="off">
+                </div>
+                <select id="ordenSolicitudes" class="sort-select" aria-label="Ordenar solicitudes">
+                    <option value="nueva">Nuevas primero</option>
+                    <option value="fecha-desc">Más recientes</option>
+                    <option value="fecha-asc">Más antiguas</option>
+                    <option value="numero">N.º de solicitud</option>
+                    <option value="solicitante">Solicitante</option>
+                    <option value="estado">Estado</option>
+                </select>
+            </div>
+            <span class="table-count" id="contadorFilas"
+                  th:text="|${total} ${total == 1 ? 'solicitud' : 'solicitudes'}|"></span>
+        </div>
+
         <div class="table-wrap">
-            <table>
+            <table class="solicitudes-table">
                 <thead>
                 <tr>
-                    <th>N°</th>
+                    <th>N.º</th>
+                    <th>Tipo</th>
                     <th>Solicitante</th>
                     <th>Fecha</th>
-                    <th>Recurso / módulo</th>
-                    <th>Área</th>
-                    <th>Responsable</th>
+                    <th>Módulo / recurso</th>
                     <th>Estado</th>
-                    <th>Decisión</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="s, iter : ${solicitudes}"
-                    th:style="'animation-delay:' + ${iter.index * 45} + 'ms'">
-                    <td th:text="${s.numeroSolicitud}"></td>
-                    <td th:text="${s.nombreSolicitante}"></td>
-                    <td th:text="${s.fechaSolicitud}"></td>
-                    <td th:text="${s.recursoModulo}"></td>
-                    <td th:text="${s.areaSolicitante}"></td>
-                    <td th:text="${s.responsableAprobacion}"></td>
+                    th:attr="data-estado=${s.estado.toString()},
+                             data-fecha=${s.fechaSolicitud},
+                             data-numero=${s.numeroSolicitud},
+                             data-solicitante=${#strings.toLowerCase(s.nombreSolicitante)},
+                             data-nueva=${s.estado.toString() == 'PENDIENTE' and !s.visto},
+                             data-texto=${#strings.toLowerCase(s.numeroSolicitud + ' ' + s.nombreSolicitante + ' ' + s.areaSolicitante + ' ' + s.recursoModulo + ' ' + s.estado)}"
+                    th:classappend="${s.estado.toString() == 'PENDIENTE' and !s.visto} ? 'fila-nueva' : ''"
+                    th:style="'animation-delay:' + ${iter.index * 35} + 'ms'">
+                    <td class="cell-num" th:text="${s.numeroSolicitud}"></td>
                     <td>
-                        <span class="badge"
-                              th:classappend="${#strings.toLowerCase(s.estado.toString())}">
-                            <svg class="icon icon-xs" th:if="${s.estado.toString() == 'PENDIENTE'}">
+                        <span class="tipo-pill"
+                              th:classappend="${s.tipoSolicitud != null && s.tipoSolicitud.toString() == 'ACCESO'} ? 'tipo-pill--acceso' : 'tipo-pill--info'">
+                            <svg class="icon icon-xs" th:if="${s.tipoSolicitud != null && s.tipoSolicitud.toString() == 'ACCESO'}">
+                                <use href="#i-key"/>
+                            </svg>
+                            <svg class="icon icon-xs" th:if="${s.tipoSolicitud == null || s.tipoSolicitud.toString() != 'ACCESO'}">
+                                <use href="#i-file"/>
+                            </svg>
+                            <span th:text="${s.tipoSolicitud != null && s.tipoSolicitud.toString() == 'ACCESO' ? 'Acceso' : 'Información'}"></span>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="cell-user">
+                            <span class="avatar-initial"
+                                  th:text="${#strings.isEmpty(s.nombreSolicitante) ? '?' : #strings.substring(s.nombreSolicitante, 0, 1)}"></span>
+                            <div class="cell-user-text">
+                                <strong th:text="${s.nombreSolicitante}"></strong>
+                                <small th:text="${s.areaSolicitante}"></small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="cell-date" th:text="${s.fechaSolicitud}"></td>
+                    <td class="cell-recurso" th:text="${s.recursoModulo}"></td>
+                    <td>
+                        <span class="badge" th:classappend="${#strings.toLowerCase(s.estado.toString())}">
+                            <svg class="icon icon-xs" th:if="${s.estado.toString() == 'PENDIENTE' || s.estado.toString() == 'EN_REVISION'}">
                                 <use href="#i-clock"/>
                             </svg>
                             <svg class="icon icon-xs" th:if="${s.estado.toString() == 'APROBADA'}">
@@ -71,16 +162,22 @@
                             <span th:text="${s.estado}"></span>
                         </span>
                     </td>
-                    <td th:text="${s.fechaAprobacionRechazo != null ? s.fechaAprobacionRechazo : '—'}"></td>
-                    <td>
-                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost">
-                            <svg class="icon icon-xs"><use href="#i-file"/></svg>
-                            Ver
+                    <td class="cell-actions">
+                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost btn-sm">
+                            Ver detalle
                         </a>
                     </td>
                 </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="table-empty-filter" id="sinResultados" style="display:none;">
+            No hay solicitudes que coincidan con la búsqueda.
+        </div>
+        <div class="table-pagination">
+            <button type="button" class="pager-btn" id="paginaAnterior">Anterior</button>
+            <div class="pager-nums" id="paginaNumeros"></div>
+            <button type="button" class="pager-btn" id="paginaSiguiente">Siguiente</button>
         </div>
     </section>
 
@@ -90,7 +187,7 @@
                 <svg class="icon"><use href="#i-file"/></svg>
             </div>
             <h2>Sin solicitudes registradas</h2>
-            <p th:if="${puedeCrear}">Registre la primera solicitud para iniciar el seguimiento.</p>
+            <p th:if="${puedeCrear}">Registra la primera solicitud para iniciar el seguimiento.</p>
             <p th:unless="${puedeCrear}">Aún no hay solicitudes en el sistema.</p>
             <a th:if="${puedeCrear}" th:href="@{/solicitudes/nueva}" class="btn btn-primary"
                style="margin-top:18px;">
@@ -100,5 +197,149 @@
         </div>
     </section>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filas = Array.prototype.slice.call(
+        document.querySelectorAll('.solicitudes-table tbody tr'));
+    const tabs = document.querySelectorAll('.filter-tab');
+    const contador = document.getElementById('contadorFilas');
+    const sinResultados = document.getElementById('sinResultados');
+    const buscador = document.getElementById('buscarSolicitudes');
+    const orden = document.getElementById('ordenSolicitudes');
+    const prev = document.getElementById('paginaAnterior');
+    const next = document.getElementById('paginaSiguiente');
+    const nums = document.getElementById('paginaNumeros');
+    if (!filas.length) {
+        return;
+    }
+    const estado = { filtro: 'TODAS', texto: '', orden: 'nueva', pagina: 1, porPagina: 8 };
+
+    function normalizar(valor) {
+        return (valor || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function filtradas() {
+        return filas.filter(function (fila) {
+            const coincideEstado = estado.filtro === 'TODAS'
+                || fila.dataset.estado === estado.filtro;
+            const coincideTexto = !estado.texto
+                || normalizar(fila.dataset.texto).indexOf(estado.texto) !== -1;
+            return coincideEstado && coincideTexto;
+        });
+    }
+
+    function ordenadas(lista) {
+        const copia = lista.slice();
+        switch (estado.orden) {
+            case 'nueva':
+                copia.sort(function (a, b) {
+                    const nuevaA = a.dataset.nueva === 'true' ? 0 : 1;
+                    const nuevaB = b.dataset.nueva === 'true' ? 0 : 1;
+                    if (nuevaA !== nuevaB) {
+                        return nuevaA - nuevaB;
+                    }
+                    return b.dataset.fecha.localeCompare(a.dataset.fecha);
+                });
+                break;
+            case 'fecha-asc':
+                copia.sort(function (a, b) { return a.dataset.fecha.localeCompare(b.dataset.fecha); });
+                break;
+            case 'numero':
+                copia.sort(function (a, b) { return a.dataset.numero.localeCompare(b.dataset.numero); });
+                break;
+            case 'solicitante':
+                copia.sort(function (a, b) { return a.dataset.solicitante.localeCompare(b.dataset.solicitante); });
+                break;
+            case 'estado':
+                copia.sort(function (a, b) { return a.dataset.estado.localeCompare(b.dataset.estado); });
+                break;
+            default:
+                copia.sort(function (a, b) { return b.dataset.fecha.localeCompare(a.dataset.fecha); });
+        }
+        return copia;
+    }
+
+    function pintarPaginacion(totalPaginas) {
+        if (nums) {
+            nums.innerHTML = '';
+            for (let i = 1; i <= totalPaginas; i++) {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.className = 'pager-num' + (i === estado.pagina ? ' active' : '');
+                boton.textContent = i;
+                boton.addEventListener('click', function () {
+                    estado.pagina = i;
+                    render();
+                });
+                nums.appendChild(boton);
+            }
+        }
+        if (prev) prev.disabled = estado.pagina === 1;
+        if (next) next.disabled = estado.pagina >= totalPaginas;
+    }
+
+    function render() {
+        const lista = ordenadas(filtradas());
+        const totalPaginas = Math.max(1, Math.ceil(lista.length / estado.porPagina));
+        if (estado.pagina > totalPaginas) {
+            estado.pagina = totalPaginas;
+        }
+        const inicio = (estado.pagina - 1) * estado.porPagina;
+        const visibles = lista.slice(inicio, inicio + estado.porPagina);
+        filas.forEach(function (fila) { fila.style.display = 'none'; });
+        visibles.forEach(function (fila) { fila.style.display = ''; });
+        if (contador) {
+            contador.textContent = lista.length === 0
+                ? '0 solicitudes'
+                : (inicio + 1) + '–' + Math.min(inicio + estado.porPagina, lista.length)
+                    + ' de ' + lista.length;
+        }
+        if (sinResultados) {
+            sinResultados.style.display = lista.length === 0 ? 'block' : 'none';
+        }
+        pintarPaginacion(totalPaginas);
+    }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            tabs.forEach(function (t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            estado.filtro = tab.dataset.filter;
+            estado.pagina = 1;
+            render();
+        });
+    });
+    if (buscador) {
+        buscador.addEventListener('input', function () {
+            estado.texto = normalizar(buscador.value.trim());
+            estado.pagina = 1;
+            render();
+        });
+    }
+    if (orden) {
+        orden.addEventListener('change', function () {
+            estado.orden = orden.value;
+            estado.pagina = 1;
+            render();
+        });
+    }
+    if (prev) {
+        prev.addEventListener('click', function () {
+            if (estado.pagina > 1) {
+                estado.pagina--;
+                render();
+            }
+        });
+    }
+    if (next) {
+        next.addEventListener('click', function () {
+            estado.pagina++;
+            render();
+        });
+    }
+    render();
+});
+</script>
 </body>
 </html>

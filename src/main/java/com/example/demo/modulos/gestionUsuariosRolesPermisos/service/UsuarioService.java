@@ -3,6 +3,7 @@ package com.example.demo.modulos.gestionUsuariosRolesPermisos.service;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.dto.UsuarioRequestDTO;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.dto.UsuarioResponseDTO;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.Rol;
+import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.TipoVigencia;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.Usuario;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.mapper.UsuarioMapper;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.repository.RolRepository;
@@ -46,6 +47,12 @@ public class UsuarioService {
     }
 
     @Transactional(readOnly = true)
+    public Usuario perfil(String username) {
+        return usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + username));
+    }
+
+    @Transactional(readOnly = true)
     public UsuarioRequestDTO paraEdicion(Long id) {
         return usuarioMapper.toRequest(obtener(id));
     }
@@ -77,7 +84,7 @@ public class UsuarioService {
         usuario.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         usuario.setActivo(dto.isActivo());
         usuario.setFechaCreacion(LocalDateTime.now());
-        asignarRol(usuario, dto.getRolNombre());
+        asignarRoles(usuario, dto);
         return usuarioMapper.toResponse(usuarioRepository.save(usuario));
     }
 
@@ -107,9 +114,9 @@ public class UsuarioService {
             usuario.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         }
 
-        if (limpiar(dto.getRolNombre()) != null) {
-            usuario.getRoles().clear();
-            asignarRol(usuario, dto.getRolNombre());
+        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+            usuario.getUsuarioRoles().clear();
+            asignarRoles(usuario, dto);
         }
         return usuarioMapper.toResponse(usuarioRepository.save(usuario));
     }
@@ -143,14 +150,30 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + id));
     }
 
-    private void asignarRol(Usuario usuario, String nombreRol) {
-        String nombre = limpiar(nombreRol);
-        if (nombre == null) {
+    private void asignarRoles(Usuario usuario, UsuarioRequestDTO dto) {
+        if (dto.getRoles() == null || dto.getRoles().isEmpty()) {
             return;
         }
-        Rol rol = rolRepository.findByNombre(nombre)
-                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + nombre));
-        usuario.addRol(rol);
+        TipoVigencia tipo = "TEMPORAL".equalsIgnoreCase(dto.getTipoVigencia())
+                ? TipoVigencia.TEMPORAL
+                : TipoVigencia.DEFINITIVO;
+        if (tipo == TipoVigencia.TEMPORAL) {
+            if (dto.getFechaFinRol() == null) {
+                throw new IllegalArgumentException("Indique la fecha de fin para un rol temporal");
+            }
+            if (!dto.getFechaFinRol().isAfter(java.time.LocalDate.now())) {
+                throw new IllegalArgumentException("La fecha de fin del rol debe ser posterior a hoy");
+            }
+        }
+        for (String nombreRol : dto.getRoles()) {
+            String nombre = limpiar(nombreRol);
+            if (nombre == null) {
+                continue;
+            }
+            Rol rol = rolRepository.findByNombre(nombre)
+                    .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + nombre));
+            usuario.addRol(rol, tipo, tipo == TipoVigencia.TEMPORAL ? dto.getFechaFinRol() : null);
+        }
     }
 
     private String limpiar(String valor) {

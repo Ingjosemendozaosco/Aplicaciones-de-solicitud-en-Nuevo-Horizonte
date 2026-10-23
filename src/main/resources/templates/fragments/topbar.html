@@ -19,22 +19,41 @@
             <svg class="icon"><use href="#i-list"/></svg>
             Solicitudes
         </a>
-        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Gerencia')"
+        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')"
            th:href="@{/solicitudes/nueva}" class="nav-btn nav-btn--accent">
             <svg class="icon"><use href="#i-plus"/></svg>
             Nueva
         </a>
-        <a sec:authorize="hasRole('Administración')" th:href="@{/usuarios}">
+        <a sec:authorize="hasRole('Gerencia')" th:href="@{/usuarios}">
             <svg class="icon"><use href="#i-users"/></svg>
             Usuarios
         </a>
-        <a sec:authorize="hasRole('Administración')" th:href="@{/roles}">
+        <a sec:authorize="hasRole('Gerencia')" th:href="@{/roles}">
             <svg class="icon"><use href="#i-key"/></svg>
             Roles
+        </a>
+        <a sec:authorize="hasRole('Gerencia')" th:href="@{/documentos}">
+            <svg class="icon"><use href="#i-file"/></svg>
+            Documentos
+        </a>
+        <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/disponibles}">
+            <svg class="icon"><use href="#i-grid"/></svg>
+            Disponibles
         </a>
         <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/reportes}">
             <svg class="icon"><use href="#i-chart"/></svg>
             Reportes
+        </a>
+        <a th:href="@{/notificaciones}" class="nav-bell" sec:authorize="isAuthenticated()"
+           title="Notificaciones">
+            <svg class="icon"><use href="#i-bell"/></svg>
+            <span class="nav-bell-badge"
+                  th:if="${notificacionesNoLeidas != null and notificacionesNoLeidas > 0}"
+                  th:text="${notificacionesNoLeidas}"></span>
+        </a>
+        <a th:href="@{/perfil}">
+            <svg class="icon"><use href="#i-user"/></svg>
+            Mi perfil
         </a>
         <button type="button" class="nav-btn"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
