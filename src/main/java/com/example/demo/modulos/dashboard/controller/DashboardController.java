@@ -10,6 +10,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,8 +49,10 @@ public class DashboardController {
         model.addAttribute("pendientes", contar(solicitudes, EstadoSolicitud.PENDIENTE));
         model.addAttribute("aprobadas", contar(solicitudes, EstadoSolicitud.APROBADA));
         model.addAttribute("rechazadas", contar(solicitudes, EstadoSolicitud.RECHAZADA));
+        model.addAttribute("borradores", contar(solicitudes, EstadoSolicitud.BORRADOR));
         model.addAttribute("visionGlobal", visionGlobal);
         model.addAttribute("recientes", recientes(solicitudes));
+        model.addAttribute("semana", semanaStats(solicitudes));
 
         if (administracion) {
             model.addAttribute("totalUsuarios", usuarioService.total());
@@ -95,6 +100,32 @@ public class DashboardController {
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .limit(6)
                 .toList();
+    }
+
+    private List<Map<String, Object>> semanaStats(List<SolicitudResponseDTO> solicitudes) {
+        LocalDate hoy = LocalDate.now();
+        Map<LocalDate, Long> conteo = new LinkedHashMap<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate dia = hoy.minusDays(i);
+            conteo.put(dia, 0L);
+        }
+        for (SolicitudResponseDTO s : solicitudes) {
+            if (s.getFechaCreacion() != null) {
+                LocalDate fecha = s.getFechaCreacion().toLocalDate();
+                if (conteo.containsKey(fecha)) {
+                    conteo.put(fecha, conteo.get(fecha) + 1);
+                }
+            }
+        }
+        List<Map<String, Object>> lista = new ArrayList<>();
+        for (Map.Entry<LocalDate, Long> entry : conteo.entrySet()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("dia", entry.getKey().getDayOfWeek().toString().substring(0, 3)); // Mon, Tue...
+            item.put("fecha", entry.getKey().toString());
+            item.put("count", entry.getValue());
+            lista.add(item);
+        }
+        return lista;
     }
 
     private boolean tieneRol(Authentication authentication, String fragmento) {

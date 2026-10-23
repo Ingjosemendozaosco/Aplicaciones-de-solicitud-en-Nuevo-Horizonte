@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Constancia de solicitud aprobada - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container container--narrow">
+    <div class="constancia-toolbar">
+        <a th:href="@{'/solicitudes/' + ${solicitud.idSolicitud}}" class="back-link" style="margin:0;">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            Volver al detalle
+        </a>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a th:href="@{'/solicitudes/' + ${solicitud.idSolicitud}}" class="btn btn-secondary btn-sm">
+                Ver solicitud
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                Imprimir / Guardar PDF
+            </button>
+        </div>
+    </div>
+
+    <article class="constancia">
+        <div class="constancia-head">
+            <div class="constancia-brand">
+                <span class="logo-badge">
+                    <svg class="icon"><use href="#i-compass"/></svg>
+                </span>
+                <div>
+                    <strong>Nuevo Horizonte</strong>
+                    <small>Sistema de gestión de solicitudes</small>
+                </div>
+            </div>
+            <div class="constancia-meta">
+                <strong th:text="${solicitud.numeroSolicitud}"></strong>
+                <span>Emitida el día de hoy</span>
+            </div>
+        </div>
+
+        <h1>Constancia de solicitud aprobada</h1>
+        <p class="constancia-sub">
+            Se certifica que la solicitud registrada en el sistema fue evaluada y aprobada
+            por el área responsable, conforme a los datos que se detallan a continuación.
+        </p>
+
+        <div class="constancia-datos">
+            <div class="dato">
+                <span>N.º de solicitud</span>
+                <strong th:text="${solicitud.numeroSolicitud}"></strong>
+            </div>
+            <div class="dato">
+                <span>Fecha de solicitud</span>
+                <strong th:text="${solicitud.fechaSolicitud}"></strong>
+            </div>
+            <div class="dato">
+                <span>Solicitante</span>
+                <strong th:text="${solicitud.nombreSolicitante}"></strong>
+            </div>
+            <div class="dato">
+                <span>Área</span>
+                <strong th:text="${solicitud.areaSolicitante}"></strong>
+            </div>
+            <div class="dato">
+                <span>Cargo formal</span>
+                <strong th:text="${solicitud.cargoSolicitante != null ? solicitud.cargoSolicitante : 'No registrado'}"></strong>
+            </div>
+            <div class="dato">
+                <span>Tipo de solicitud</span>
+                <strong th:text="${solicitud.tipoSolicitudLegible}"></strong>
+            </div>
+            <div class="dato">
+                <span th:text="${solicitud.recursoModuloEtiqueta}"></span>
+                <strong th:text="${solicitud.recursoModulo}"></strong>
+            </div>
+            <div class="dato">
+                <span>Responsable de aprobación</span>
+                <strong th:text="${solicitud.responsableAprobacion}"></strong>
+            </div>
+            <div class="dato">
+                <span>Fecha de decisión</span>
+                <strong th:if="${solicitud.fechaAprobacionRechazo != null}"
+                        th:text="${#strings.substring(solicitud.fechaAprobacionRechazo.toString(), 0, 10)}"></strong>
+                <strong th:if="${solicitud.fechaAprobacionRechazo == null}">No registrada</strong>
+            </div>
+            <div class="dato">
+                <span>Estado</span>
+                <strong th:text="${solicitud.estado}"></strong>
+            </div>
+            <div class="dato" th:if="${solicitud.tipoSolicitud != null && solicitud.tipoSolicitud.toString() == 'ACCESO'}">
+                <span>Vigencia del acceso</span>
+                <strong th:if="${solicitud.permanente}">Permanente (sin fecha de fin)</strong>
+                <strong th:unless="${solicitud.permanente}"
+                        th:text="|${solicitud.fechaInicioAcceso != null ? solicitud.fechaInicioAcceso : 'Inicio no registrado'} — ${solicitud.fechaFinAcceso != null ? solicitud.fechaFinAcceso : 'sin fecha de fin'}|"></strong>
+            </div>
+        </div>
+
+        <div class="constancia-seccion" th:if="${solicitud.motivo != null && !solicitud.motivo.isBlank()}">
+            <span class="constancia-label">Motivo de la solicitud</span>
+            <p th:text="${solicitud.motivo}"></p>
+        </div>
+
+        <div class="constancia-seccion"
+             th:if="${solicitud.tipoSolicitud != null && solicitud.tipoSolicitud.toString() == 'ACCESO' && !#lists.isEmpty(solicitud.detalles)}">
+            <span class="constancia-label">Módulos autorizados</span>
+            <table class="constancia-tabla">
+                <thead>
+                <tr>
+                    <th>Módulo</th>
+                    <th>Nivel de acceso</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : ${solicitud.detalles}">
+                    <td th:text="${d.etiqueta}"></td>
+                    <td th:text="${d.nivelLegible}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="constancia-seccion"
+             th:if="${solicitud.comentarioAdmin != null && !solicitud.comentarioAdmin.isBlank()}">
+            <span class="constancia-label">Observación de la decisión</span>
+            <p th:text="${solicitud.comentarioAdmin}"></p>
+        </div>
+
+        <div class="constancia-firma">
+            <div>Administración</div>
+            <div>Gerencia</div>
+        </div>
+
+        <div class="constancia-footer">
+            Documento generado automáticamente por el Sistema de Gestión de Solicitudes de Nuevo Horizonte.
+            Su validez interna queda respaldada por el registro electrónico de la solicitud.
+        </div>
+    </article>
+</main>
+</body>
+</html>

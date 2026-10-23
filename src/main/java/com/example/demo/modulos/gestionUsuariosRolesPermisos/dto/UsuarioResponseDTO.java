@@ -11,6 +11,7 @@ public class UsuarioResponseDTO {
     private boolean activo;
     private LocalDateTime fechaCreacion;
     private List<String> roles;
+    private String cargoFormal;
 
     public Long getId() {
         return id;
@@ -58,5 +59,13 @@ public class UsuarioResponseDTO {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public String getCargoFormal() {
+        return cargoFormal;
+    }
+
+    public void setCargoFormal(String cargoFormal) {
+        this.cargoFormal = cargoFormal;
     }
 }

@@ -26,8 +26,7 @@
 
     <h2>Iniciar sesión</h2>
 
-    <div th:if="${param.error}" class="alert"
-         style="background:#fee2e2;border-color:#fecaca;color:#991b1b;">
+    <div th:if="${param.error}" class="alert alert-error">
         <svg class="icon"><use href="#i-alert"/></svg>
         Usuario o contraseña incorrectos.
     </div>
@@ -42,7 +41,7 @@
             <div class="input-group">
                 <svg class="icon"><use href="#i-user"/></svg>
                 <input id="username" name="username" type="text"
-                       placeholder="ADM, AP, AV o GRT" required autofocus
+                       placeholder="Tu usuario" required autofocus
                        autocomplete="username">
             </div>
         </div>
@@ -57,19 +56,11 @@
         </div>
 
         <button type="submit" class="btn btn-primary btn-block">
-            <svg class="icon"><use href="#i-logout"/></svg>
             Ingresar
         </button>
     </form>
 
-    <div class="login-hint">
-        <strong>Credenciales demo:</strong> ADM, GRT, AP o AV · contraseña <strong>admin123</strong><br>
-        Administración aprueba o rechaza; las demás áreas registran solicitudes.
-    </div>
-
-    <p style="margin-top:16px;text-align:center;font-size:11.5px;color:#94a3b8;">
-        © 2026 Nuevo Horizonte
-    </p>
+    <p class="login-footer">© 2026 Nuevo Horizonte</p>
 </main>
 </body>
 </html>

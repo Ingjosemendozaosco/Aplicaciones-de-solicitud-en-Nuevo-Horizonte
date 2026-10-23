@@ -8,6 +8,8 @@ public class SolicitudDecisionDTO {
 
     private String comentario;
 
+    private Long idDocumento;
+
     public EstadoSolicitud getEstado() {
         return estado;
     }
@@ -22,5 +24,13 @@ public class SolicitudDecisionDTO {
 
     public void setComentario(String comentario) {
         this.comentario = comentario;
+    }
+
+    public Long getIdDocumento() {
+        return idDocumento;
+    }
+
+    public void setIdDocumento(Long idDocumento) {
+        this.idDocumento = idDocumento;
     }
 }

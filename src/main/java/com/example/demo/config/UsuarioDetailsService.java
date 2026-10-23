@@ -32,9 +32,12 @@ public class UsuarioDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        for (Rol rol : usuario.getRoles()) {
+        for (Rol rol : usuario.rolesVigentes()) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + rol.getNombre()));
             for (RolPermiso permiso : rol.getRolPermisos()) {
+                if (!permiso.esVigente()) {
+                    continue;
+                }
                 String modulo = permiso.getModulo();
                 if (permiso.isPuedeLeer()) {
                     authorities.add(new SimpleGrantedAuthority("PERM_" + modulo + "_LEER"));

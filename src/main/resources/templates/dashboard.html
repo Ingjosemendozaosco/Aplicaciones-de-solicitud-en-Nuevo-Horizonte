@@ -43,6 +43,15 @@
                 <div class="stat-label">Pendientes</div>
             </div>
         </div>
+        <div class="stat-card stat-card--info">
+            <div class="stat-icon">
+                <svg class="icon"><use href="#i-edit"/></svg>
+            </div>
+            <div>
+                <div class="stat-value" th:text="${borradores}">0</div>
+                <div class="stat-label">Borradores</div>
+            </div>
+        </div>
         <div class="stat-card stat-card--success">
             <div class="stat-icon">
                 <svg class="icon"><use href="#i-check-circle"/></svg>
@@ -87,7 +96,7 @@
             Accesos rápidos
         </h2>
         <div class="quick-grid">
-            <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Gerencia')"
+            <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')"
                th:href="@{/solicitudes/nueva}" class="quick-card">
                 <svg class="icon"><use href="#i-plus"/></svg>
                 <div>
@@ -102,18 +111,33 @@
                     <span>Historial y seguimiento</span>
                 </div>
             </a>
-            <a sec:authorize="hasRole('Administración')" th:href="@{/usuarios}" class="quick-card">
+            <a sec:authorize="hasAnyRole('Administración','Gerencia')"
+               th:href="@{/disponibles}" class="quick-card">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                <div>
+                    <strong>Disponibles</strong>
+                    <span>Documentos y módulos</span>
+                </div>
+            </a>
+            <a sec:authorize="hasRole('Gerencia')" th:href="@{/usuarios}" class="quick-card">
                 <svg class="icon"><use href="#i-users"/></svg>
                 <div>
                     <strong>Usuarios</strong>
                     <span>Altas, roles y estado</span>
                 </div>
             </a>
-            <a sec:authorize="hasRole('Administración')" th:href="@{/roles}" class="quick-card">
+            <a sec:authorize="hasRole('Gerencia')" th:href="@{/roles}" class="quick-card">
                 <svg class="icon"><use href="#i-key"/></svg>
                 <div>
                     <strong>Roles y permisos</strong>
                     <span>Accesos por módulo</span>
+                </div>
+            </a>
+            <a sec:authorize="hasRole('Gerencia')" th:href="@{/documentos}" class="quick-card">
+                <svg class="icon"><use href="#i-file"/></svg>
+                <div>
+                    <strong>Documentos</strong>
+                    <span>Informes que entrega Administración</span>
                 </div>
             </a>
             <a sec:authorize="hasAnyRole('Administración','Gerencia')"
@@ -124,6 +148,24 @@
                     <span>Indicadores de atención</span>
                 </div>
             </a>
+        </div>
+    </section>
+
+    <section class="card" style="margin-top:22px;">
+        <h2 class="card-title">
+            <svg class="icon"><use href="#i-chart"/></svg>
+            Actividad semanal
+        </h2>
+        <div class="weekly-chart">
+            <div class="weekly-bars">
+                <div th:each="item : ${semana}" class="weekly-bar">
+                    <div class="bar-label" th:text="${item.dia}"></div>
+                    <div class="bar-container">
+                        <div class="bar-fill" th:style="'height:' + (${item.count} * 20) + 'px'"></div>
+                    </div>
+                    <div class="bar-value" th:text="${item.count}"></div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -148,7 +190,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="s : ${recientes}">
+                <tr th:each="s : ${recientes}"
+                    th:classappend="${s.estado.toString() == 'PENDIENTE' and !s.visto} ? 'fila-nueva' : ''">
                     <td th:text="${s.numeroSolicitud}"></td>
                     <td th:text="${s.nombreSolicitante}"></td>
                     <td th:text="${s.areaSolicitante}"></td>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notificaciones - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container container--narrow">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-bell"/></svg>
+                Avisos
+            </span>
+            <h1>Notificaciones</h1>
+            <p class="subtitle">Solicitudes, decisiones y documentos que requieren tu atención.</p>
+        </div>
+        <form th:action="@{/notificaciones/leer-todas}" method="post"
+              th:if="${!#lists.isEmpty(notificaciones)}">
+            <button type="submit" class="btn btn-secondary btn-sm">
+                <svg class="icon icon-xs"><use href="#i-check"/></svg>
+                Marcar todas como leídas
+            </button>
+        </form>
+    </div>
+
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+
+    <section class="card card--notificaciones" th:if="${!#lists.isEmpty(notificaciones)}">
+        <a th:each="n : ${notificaciones}"
+           th:href="@{'/notificaciones/' + ${n.id} + '/abrir'}"
+           class="notif-item" th:classappend="${!n.leida} ? 'unread' : ''">
+            <span class="notif-dot"></span>
+            <div class="notif-body">
+                <strong th:text="${n.titulo}"></strong>
+                <p th:text="${n.mensaje}"></p>
+                <small th:text="${#strings.replace(#strings.substring(n.fechaCreacion.toString(), 0, 16), 'T', ' ')}"></small>
+            </div>
+            <svg class="icon notif-arrow"><use href="#i-arrow-left"/></svg>
+        </a>
+    </section>
+
+    <section class="card" th:if="${#lists.isEmpty(notificaciones)}">
+        <div class="empty">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-bell"/></svg>
+            </div>
+            <h2>Sin notificaciones</h2>
+            <p>Cuando haya movimientos en tus solicitudes aparecerán aquí.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,19 +1,20 @@
 package com.example.demo.modulos.gestionUsuariosRolesPermisos.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "usuario")
@@ -39,18 +40,35 @@ public class Usuario {
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_rol",
-            joinColumns = @JoinColumn(name = "id_usuario"),
-            inverseJoinColumns = @JoinColumn(name = "id_rol"))
-    private Set<Rol> roles = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<UsuarioRol> usuarioRoles = new LinkedHashSet<>();
 
     public void addRol(Rol rol) {
-        this.roles.add(rol);
+        addRol(rol, TipoVigencia.DEFINITIVO, null);
     }
 
-    public void removeRol(Rol rol) {
-        this.roles.remove(rol);
+    public void addRol(Rol rol, TipoVigencia tipoVigencia, LocalDate fechaFin) {
+        boolean yaAsignado = usuarioRoles.stream()
+                .anyMatch(ur -> ur.isActivo() && ur.getRol().getId() != null
+                        && ur.getRol().getId().equals(rol.getId()));
+        if (yaAsignado) {
+            return;
+        }
+        UsuarioRol usuarioRol = new UsuarioRol();
+        usuarioRol.setUsuario(this);
+        usuarioRol.setRol(rol);
+        usuarioRol.setTipoVigencia(tipoVigencia != null ? tipoVigencia : TipoVigencia.DEFINITIVO);
+        usuarioRol.setFechaInicio(LocalDate.now());
+        usuarioRol.setFechaFin(tipoVigencia == TipoVigencia.TEMPORAL ? fechaFin : null);
+        usuarioRol.setActivo(true);
+        usuarioRoles.add(usuarioRol);
+    }
+
+    public Set<Rol> rolesVigentes() {
+        return usuarioRoles.stream()
+                .filter(UsuarioRol::esVigente)
+                .map(UsuarioRol::getRol)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public Long getId() {
@@ -101,11 +119,12 @@ public class Usuario {
         this.fechaCreacion = fechaCreacion;
     }
 
-    public Set<Rol> getRoles() {
-        return roles;
+    public Set<UsuarioRol> getUsuarioRoles() {
+        return usuarioRoles;
     }
 
-    public void setRoles(Set<Rol> roles) {
-        this.roles = roles;
+    public void setUsuarioRoles(Set<UsuarioRol> usuarioRoles) {
+        this.usuarioRoles = usuarioRoles;
     }
 }
+

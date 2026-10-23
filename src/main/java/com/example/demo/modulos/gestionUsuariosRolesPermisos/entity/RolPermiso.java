@@ -2,6 +2,8 @@ package com.example.demo.modulos.gestionUsuariosRolesPermisos.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "rol_permiso")
@@ -37,6 +41,27 @@ public class RolPermiso {
 
     @Column(name = "puede_eliminar", nullable = false)
     private boolean puedeEliminar;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_vigencia", length = 20)
+    private TipoVigencia tipoVigencia = TipoVigencia.DEFINITIVO;
+
+    @Column(name = "fecha_inicio")
+    private LocalDate fechaInicio;
+
+    @Column(name = "fecha_fin")
+    private LocalDate fechaFin;
+
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+
+    @Column(name = "origen_solicitud", length = 20)
+    private String origenSolicitud;
+
+    public boolean esVigente() {
+        return activo
+                && (fechaFin == null || !fechaFin.isBefore(LocalDate.now()));
+    }
 
     public Long getId() {
         return id;
@@ -92,5 +117,45 @@ public class RolPermiso {
 
     public void setPuedeEliminar(boolean puedeEliminar) {
         this.puedeEliminar = puedeEliminar;
+    }
+
+    public TipoVigencia getTipoVigencia() {
+        return tipoVigencia;
+    }
+
+    public void setTipoVigencia(TipoVigencia tipoVigencia) {
+        this.tipoVigencia = tipoVigencia;
+    }
+
+    public LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public LocalDate getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDate fechaFin) {
+        this.fechaFin = fechaFin;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public String getOrigenSolicitud() {
+        return origenSolicitud;
+    }
+
+    public void setOrigenSolicitud(String origenSolicitud) {
+        this.origenSolicitud = origenSolicitud;
     }
 }

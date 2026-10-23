@@ -42,6 +42,7 @@
                 <tr>
                     <th>Usuario</th>
                     <th>Correo</th>
+                    <th>Cargo formal</th>
                     <th>Roles</th>
                     <th>Estado</th>
                     <th>Creado</th>
@@ -54,6 +55,9 @@
                         <strong th:text="${u.username}"></strong>
                     </td>
                     <td th:text="${u.email}"></td>
+                    <td>
+                        <span th:text="${u.cargoFormal}" style="font-weight:600;color:var(--blue-800);"></span>
+                    </td>
                     <td>
                         <span class="role-chip" th:each="r : ${u.roles}" th:text="${r}"></span>
                         <span th:if="${#lists.isEmpty(u.roles)}" class="muted">Sin rol</span>
