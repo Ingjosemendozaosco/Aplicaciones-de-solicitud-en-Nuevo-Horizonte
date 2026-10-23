@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solicitudes Aprobadas - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main class="container">
+    <div class="page-head page-head--solicitudes">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-check"/></svg>
+                Archivos aprobados
+            </span>
+            <h1>Solicitudes aprobadas</h1>
+            <p class="subtitle">Documentos e informes entregados por área solicitante.</p>
+        </div>
+        <a th:href="@{/solicitudes}" class="btn btn-secondary">
+            <svg class="icon"><use href="#i-arrow-left"/></svg>
+            Volver a solicitudes
+        </a>
+    </div>
+
+    <div th:if="${mensaje}" class="alert">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span th:text="${mensaje}"></span>
+    </div>
+
+    <section class="card card--table" th:if="${!#lists.isEmpty(solicitudes)}">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-file"/></svg>
+                Informes aprobados
+            </h2>
+            <span class="table-count" id="contadorFilas"
+                  th:text="|${total} ${total == 1 ? 'informe' : 'informes'}|"></span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="solicitudes-table">
+                <thead>
+                <tr>
+                    <th>N.º</th>
+                    <th>Solicitante</th>
+                    <th>Área</th>
+                    <th>Recurso</th>
+                    <th>Informe entregado</th>
+                    <th>Fecha</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${solicitudes}">
+                    <td class="cell-num" th:text="${s.numeroSolicitud}"></td>
+                    <td>
+                        <div class="cell-user">
+                            <span class="avatar-initial"
+                                  th:text="${#strings.isEmpty(s.nombreSolicitante) ? '?' : #strings.substring(s.nombreSolicitante, 0, 1)}"></span>
+                            <div class="cell-user-text">
+                                <strong th:text="${s.nombreSolicitante}"></strong>
+                                <small th:text="${s.areaSolicitante}"></small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="cell-recurso" th:text="${s.areaSolicitante}"></td>
+                    <td class="cell-recurso" th:text="${s.recursoModulo}"></td>
+                    <td th:text="${s.nombreInforme != null ? s.nombreInforme : 'Sin informe'}"></td>
+                    <td class="cell-date" th:text="${s.fechaAprobacionRechazo != null ? s.fechaAprobacionRechazo : '—'}"></td>
+                    <td class="cell-actions">
+                        <a th:if="${s.nombreInforme != null}" th:href="@{'/solicitudes/' + ${s.idSolicitud} + '/informe'}"
+                           class="btn btn-ghost btn-sm" target="_blank">
+                            <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                            Ver archivo
+                        </a>
+                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost btn-sm">
+                            Ver detalle
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-empty-filter" id="sinResultados" style="display:none;">
+            No hay solicitudes aprobadas con informe disponible.
+        </div>
+    </section>
+
+    <section class="card" th:if="${#lists.isEmpty(solicitudes)}">
+        <div class="empty">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-file"/></svg>
+            </div>
+            <h2>Sin solicitudes aprobadas</h2>
+            <p>No hay solicitudes aprobadas con informe disponible en este momento.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

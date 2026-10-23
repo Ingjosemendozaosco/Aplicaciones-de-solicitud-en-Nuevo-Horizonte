@@ -36,6 +36,10 @@
             <svg class="icon"><use href="#i-file"/></svg>
             Documentos
         </a>
+        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')" th:href="@{/solicitudes/lista-aprobados}">
+            <svg class="icon"><use href="#i-check"/></svg>
+            Archivos aprobados
+        </a>
         <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/disponibles}">
             <svg class="icon"><use href="#i-grid"/></svg>
             Disponibles

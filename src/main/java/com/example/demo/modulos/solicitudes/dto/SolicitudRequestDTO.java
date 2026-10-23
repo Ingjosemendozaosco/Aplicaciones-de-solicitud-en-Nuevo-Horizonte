@@ -5,6 +5,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,9 +23,9 @@ public class SolicitudRequestDTO {
 
     private String tipoInformacion;
 
-    private List<String> modulosAcceso;
+    private List<String> modulosAcceso = new ArrayList<>();
 
-    private Map<String, String> nivelesModulo;
+    private Map<String, String> nivelesModulo = new LinkedHashMap<>();
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaInicioAcceso;
