@@ -67,7 +67,7 @@
                 <p th:if="${d.descripcion != null}" th:text="${d.descripcion}"></p>
                 <div class="catalogo-doc__meta">
                     <span th:if="${d.subidoPor != null}" th:text="|Publicado por ${d.subidoPor}|"></span>
-                    <span th:text="${#strings.substring(d.fechaSubida.toString(), 0, 10)}"></span>
+                    <span th:text="${d.fechaSubida != null ? #strings.substring(d.fechaSubida.toString(), 0, 10) : '—'}"></span>
                 </div>
                 <a th:href="@{'/disponibles/' + ${d.id} + '/archivo'}" target="_blank">
                     <svg class="icon icon-xs"><use href="#i-file"/></svg>

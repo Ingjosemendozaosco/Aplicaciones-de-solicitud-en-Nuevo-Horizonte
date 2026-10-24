@@ -248,21 +248,21 @@
                                     </div>
                                 </div>
                             </section>
-                            <section class="review-section" id="secDetalle" id="rvInfoBloque">
+                            <section class="review-section" id="secDetalle">
                                 <header>
                                     <svg class="icon"><use href="#i-file-text"/></svg>
                                     <h3>Información solicitada</h3>
                                 </header>
                                 <div class="review-value" id="rvInfo"></div>
                             </section>
-                            <section class="review-section" id="secModulos" id="rvModulosBloque" hidden>
+                            <section class="review-section" id="secModulos" hidden>
                                 <header>
                                     <svg class="icon"><use href="#i-layer"/></svg>
                                     <h3>Módulos y accesos</h3>
                                 </header>
                                 <div class="review-chips" id="rvModulos"></div>
                             </section>
-                            <section class="review-section" id="secVigencia" id="rvVigenciaBloque" hidden>
+                            <section class="review-section" id="secVigencia" hidden>
                                 <header>
                                     <svg class="icon"><use href="#i-calendar"/></svg>
                                     <h3>Vigencia</h3>
@@ -436,13 +436,13 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('rvMotivo').textContent = document.getElementById('motivo').value.trim()
             || 'Sin motivo indicado';
 
-        document.getElementById('rvInfoBloque').hidden = acceso;
+        document.getElementById('secDetalle').hidden = acceso;
         if (!acceso) {
             document.getElementById('rvInfo').textContent = nombreInformacion();
         }
 
-        document.getElementById('rvModulosBloque').hidden = !acceso;
-        document.getElementById('rvVigenciaBloque').hidden = !acceso;
+        document.getElementById('secModulos').hidden = !acceso;
+        document.getElementById('secVigencia').hidden = !acceso;
         if (acceso) {
             const contenedor = document.getElementById('rvModulos');
             contenedor.textContent = '';

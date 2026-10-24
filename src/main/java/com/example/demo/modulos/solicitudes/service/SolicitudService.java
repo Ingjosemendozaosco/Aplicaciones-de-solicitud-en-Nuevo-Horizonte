@@ -475,30 +475,41 @@ public class SolicitudService {
         }
         List<ModuloDisponibleDTO> resultado = new ArrayList<>();
         for (ModuloDisponibleDTO dto : porModulo.values()) {
-            dto.getRoles().sort(Comparator.comparing(RolModuloDTO::getNombre));
+            dto.getRoles().sort(Comparator.comparing(RolModuloDTO::getNombre, Comparator.nullsLast(Comparator.naturalOrder())));
             dto.setGradiente(ColoresRol.gradiente(
-                    dto.getRoles().stream().map(RolModuloDTO::getColor).toList()));
+                    dto.getRoles().stream()
+                            .filter(r -> r != null)
+                            .map(r -> r.getColor() != null ? r.getColor() : "")
+                            .toList()));
             resultado.add(dto);
         }
-        resultado.sort(Comparator.comparing(ModuloDisponibleDTO::getEtiqueta));
+        resultado.sort(Comparator.comparing(ModuloDisponibleDTO::getEtiqueta, Comparator.nullsLast(Comparator.naturalOrder())));
         return resultado;
     }
 
     public List<AreaDisponibleDTO> areasDisponibles(List<ModuloDisponibleDTO> modulos) {
         Map<String, AreaDisponibleDTO> porArea = new LinkedHashMap<>();
         for (ModuloDisponibleDTO modulo : modulos) {
+            if (modulo == null || modulo.getRoles() == null) {
+                continue;
+            }
             for (RolModuloDTO rol : modulo.getRoles()) {
+                if (rol == null || rol.getNombre() == null) {
+                    continue;
+                }
                 AreaDisponibleDTO area = porArea.computeIfAbsent(rol.getNombre(), nombre -> {
                     AreaDisponibleDTO nueva = new AreaDisponibleDTO();
                     nueva.setNombre(nombre);
-                    nueva.setColor(rol.getColor());
+                    if (rol.getColor() != null) {
+                        nueva.setColor(rol.getColor());
+                    }
                     return nueva;
                 });
                 area.getModulos().add(modulo.getEtiqueta());
             }
         }
         List<AreaDisponibleDTO> resultado = new ArrayList<>(porArea.values());
-        resultado.sort(Comparator.comparing(AreaDisponibleDTO::getNombre));
+        resultado.sort(Comparator.comparing(AreaDisponibleDTO::getNombre, Comparator.nullsLast(Comparator.naturalOrder())));
         return resultado;
     }
 

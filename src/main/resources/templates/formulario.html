@@ -2,235 +2,587 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Horizonte Turismo - Nueva Solicitud</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-        }
-        .sidebar {
-            background: #2c3e50;
-            color: white;
-            width: 250px;
-            height: 100vh;
-            position: fixed;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar .logo {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 40px;
-            color: #667eea;
-        }
-        .sidebar nav a {
-            display: block;
-            color: #bdc3c7;
-            text-decoration: none;
-            padding: 12px 15px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            transition: all 0.3s;
-        }
-        .sidebar nav a:hover, .sidebar nav a.active {
-            background: #34495e;
-            color: white;
-        }
-        .content {
-            margin-left: 250px;
-            padding: 30px;
-        }
-        .header {
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #2c3e50;
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        .header p {
-            color: #666;
-        }
-        .form-container {
-            background: white;
-            padding: 35px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            max-width: 800px;
-        }
-        .form-section {
-            margin-bottom: 30px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid #e1e5e9;
-        }
-        .form-section h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 18px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e1e5e9;
-            border-radius: 6px;
-            font-size: 15px;
-            transition: border-color 0.3s;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn-back {
-            background: #95a5a6;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .btn-back:hover {
-            background: #7f8c8d;
-        }
-        .campos-info {
-            background: #e8f4fd;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            margin-bottom: 30px;
-        }
-        .campos-info h3 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        .campos-info ul {
-            margin-left: 20px;
-            color: #555;
-        }
-        .campos-info li {
-            margin-bottom: 6px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nueva Solicitud - Nuevo Horizonte</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="logo">🏖️ Horizonte</div>
-        <nav>
-            <a th:href="@{/dashboard}">Dashboard</a>
-            <a href="#" class="active">Nueva Solicitud</a>
-            <a th:href="@{/admin/solicitudes}">Administrar Solicitudes</a>
-        </nav>
-    </aside>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
 
-    <div class="content">
-        <header class="header">
-            <h1>Nueva Solicitud</h1>
-            <p>Complete todos los campos del formulario para enviar su solicitud</p>
-        </header>
+<main class="container container--form">
+    <a th:href="@{/solicitudes}" class="back-link">
+        <svg class="icon"><use href="#i-arrow-left"/></svg>
+        Volver a solicitudes
+    </a>
 
-        <a th:href="@{/dashboard}" class="btn-back">← Volver al Dashboard</a>
+    <div class="page-head page-head--solicitudes">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-file"/></svg>
+                Registro
+            </span>
+            <h1>Nueva solicitud</h1>
+            <p class="subtitle">Solicita información o acceso. Revisa el resumen antes de enviarlo.</p>
+        </div>
+    </div>
 
-        <div class="form-container">
-            <div class="campos-info">
-                <h3>📋 Campos requeridos:</h3>
-                <ul>
-                    <li>Número de solicitud (generado automáticamente)</li>
-                    <li>Nombre del solicitante</li>
-                    <li>Fecha de solicitud</li>
-                    <li>Recurso o módulo solicitado</li>
-                    <li>Motivo de la solicitud</li>
-                    <li>Responsable de aprobación</li>
-                    <li>Estado de la solicitud</li>
-                    <li>Fecha de aprobación o rechazo</li>
-                </ul>
+    <section class="card card--form card--form-simple">
+        <div th:if="${error}" class="alert alert-error">
+            <svg class="icon"><use href="#i-alert"/></svg>
+            <span th:text="${error}"></span>
+        </div>
+
+        <form id="solicitudForm" class="form-simple" th:action="@{/solicitudes}" method="post"
+              th:object="${solicitud}" enctype="multipart/form-data">
+
+            <div class="form-block">
+                <div class="block-head">
+                    <span class="section-num">01</span>
+                    <div>
+                        <h2 class="block-title">Tipo de solicitud</h2>
+                        <p class="block-sub">Elige qué necesitas.</p>
+                    </div>
+                </div>
+                <div class="tipo-switch">
+                    <label class="tipo-option">
+                        <input type="radio" th:field="*{tipoSolicitud}" value="INFORMACION">
+                        <span class="tipo-icon">
+                            <svg class="icon"><use href="#i-file"/></svg>
+                        </span>
+                        <span>
+                            <strong>Información</strong>
+                            <span>Un documento, reporte o dato del sistema.</span>
+                        </span>
+                    </label>
+                    <label class="tipo-option">
+                        <input type="radio" th:field="*{tipoSolicitud}" value="ACCESO">
+                        <span class="tipo-icon">
+                            <svg class="icon"><use href="#i-key"/></svg>
+                        </span>
+                        <span>
+                            <strong>Acceso a módulos</strong>
+                            <span>Permiso de lectura o edición sobre módulos.</span>
+                        </span>
+                    </label>
+                </div>
             </div>
 
-            <form th:action="@{/formulario/enviar}" method="post">
-                <div class="form-section">
-                    <h2>Datos de la Solicitud</h2>
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label>Nombre del Solicitante *</label>
-                            <input type="text" name="nombreSolicitante" required placeholder="Ingrese su nombre completo">
+            <div class="form-block">
+                <div class="block-head">
+                    <span class="section-num">02</span>
+                    <div>
+                        <h2 class="block-title">Solicitante</h2>
+                    </div>
+                </div>
+                <div class="grid">
+                    <div class="field">
+                        <label for="nombreSolicitante">Nombre completo</label>
+                        <input id="nombreSolicitante" type="text" th:field="*{nombreSolicitante}"
+                               placeholder="Nombre completo" maxlength="120" required>
+                    </div>
+                    <div class="field">
+                        <label>Área solicitante</label>
+                        <div class="readonly-chip">
+                            <svg class="icon icon-xs"><use href="#i-building"/></svg>
+                            <span id="areaActualTexto" th:text="${areaActual}"></span>
                         </div>
-                        <div class="form-group">
-                            <label>Fecha de Solicitud *</label>
-                            <input type="date" name="fechaSolicitud" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Recurso o Módulo Solicitado *</label>
-                            <input type="text" name="recurso" required placeholder="Ej: Módulo de Reservas">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Motivo de la Solicitud *</label>
-                            <textarea name="motivo" rows="4" required placeholder="Describa el motivo de su solicitud"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Responsable de Aprobación *</label>
-                            <input type="text" name="responsableAprobacion" required placeholder="Nombre del responsable">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Área de Destino *</label>
-                            <select name="areaDestino" required>
-                                <option value="">Seleccione un área</option>
-                                <option value="Administracion">Administración</option>
-                                <option value="Producto">Área de Producto</option>
-                                <option value="Ventas">Área de Ventas</option>
-                                <option value="Gerencia">Gerencia</option>
-                            </select>
-                        </div>
+                        <input type="hidden" th:field="*{areaSolicitante}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-block">
+                <div class="block-head">
+                    <span class="section-num">03</span>
+                    <div>
+                        <h2 class="block-title">Detalle</h2>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-submit">📤 Enviar Solicitud</button>
-            </form>
-        </div>
+                <div id="seccionInformacion">
+                    <div class="field full">
+                        <label for="tipoInformacion">¿Qué documento o información necesitas?</label>
+                        <select id="tipoInformacion" th:field="*{tipoInformacion}" required>
+                            <option value="">Selecciona una opción</option>
+                            <option th:each="doc : ${documentosDisponibles}" th:value="${doc.nombre}"
+                                    th:text="${doc.categoria != null ? doc.nombre + ' · ' + doc.categoria : doc.nombre}"></option>
+                            <option value="OTRO">Otro (especificar)</option>
+                        </select>
+                        <p class="form-hint" th:if="${#lists.isEmpty(documentosDisponibles)}">
+                            Gerencia aún no ha publicado documentos. Selecciona "Otro" y descríbelo.
+                        </p>
+                    </div>
+                    <div class="field full" id="campoDetalleInfo">
+                        <label for="recursoModulo">Detalle adicional <span class="optional">Opcional</span></label>
+                        <input id="recursoModulo" type="text" th:field="*{recursoModulo}"
+                               placeholder="Ej: ventas de septiembre" maxlength="120">
+                        <p class="form-hint" id="hintDetalle">Agrega una referencia si lo necesitas.</p>
+                    </div>
+                </div>
 
-        <div class="footer" style="margin-top: 30px; text-align: center; color: #888; font-size: 13px;">
-            © 2025 Horizonte Turismo - Sistema de Gestión de Solicitudes
-        </div>
-    </div>
+                <div id="seccionAcceso" hidden>
+                    <div class="field full">
+                        <label>Módulos y nivel de acceso</label>
+                        <div class="modulos-grid">
+                            <div class="modulo-chip modulo-chip--select" th:each="entry : ${modulos}">
+                                <label>
+                                    <input type="checkbox" th:field="*{modulosAcceso}" th:value="${entry.key}">
+                                    <span th:text="${entry.value}"></span>
+                                </label>
+                                <select th:name="'nivelesModulo[' + ${entry.key} + ']'"
+                                        th:aria-label="'Nivel de acceso para ' + ${entry.value}">
+                                    <option value="LECTURA">Lectura</option>
+                                    <option value="EDICION">Edición</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="form-hint" id="contadorModulos">0 módulos seleccionados</p>
+                    </div>
+
+                    <div class="switch-card">
+                        <label class="form-check">
+                            <input type="checkbox" id="permanente" th:field="*{permanente}">
+                            <span>
+                                <strong>Acceso permanente</strong>
+                                <small>Sin fecha de fin. Se mantiene hasta que se revoque.</small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="grid" id="camposFechas" style="margin-top:.9rem;">
+                        <div class="field">
+                            <label for="fechaInicioAcceso">Fecha de inicio</label>
+                            <input id="fechaInicioAcceso" type="date" th:field="*{fechaInicioAcceso}">
+                        </div>
+                        <div class="field">
+                            <label for="fechaFinAcceso">Fecha de fin <span class="optional">Opcional</span></label>
+                            <input id="fechaFinAcceso" type="date" th:field="*{fechaFinAcceso}">
+                        </div>
+                    </div>
+                    <p class="form-hint">Si no indicas fecha de fin, el acceso dura 30 días.</p>
+                </div>
+
+                <div class="field full" style="margin-top:1rem;">
+                    <label for="motivo">Motivo</label>
+                    <textarea id="motivo" th:field="*{motivo}"
+                              placeholder="Explica brevemente para qué necesitas esto" required></textarea>
+                </div>
+            </div>
+
+            <div class="form-block">
+                <div class="block-head">
+                    <span class="section-num">04</span>
+                    <div>
+                        <h2 class="block-title">Adjunto <span class="optional">Opcional</span></h2>
+                        <p class="block-sub">Puedes adjuntar un archivo de respaldo.</p>
+                    </div>
+                </div>
+                <div class="file-row">
+                    <input id="archivo" type="file" name="archivo"
+                           accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                    <span class="file-chip" id="archivoPreview" hidden>
+                        <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                        <span id="archivoNombre"></span>
+                        <button type="button" id="btnQuitarArchivo" title="Quitar archivo">&times;</button>
+                    </span>
+                </div>
+                <p class="form-hint">PDF, Word, Excel, texto o imágenes. Máximo 10 MB.</p>
+            </div>
+
+            <div class="form-alert" id="formError" hidden>
+                <svg class="icon"><use href="#i-alert"/></svg>
+                <span id="formErrorTexto"></span>
+            </div>
+
+            <div class="actions actions--simple">
+                <a th:href="@{/solicitudes}" class="btn btn-secondary">
+                    <svg class="icon"><use href="#i-arrow-left"/></svg>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-secondary" formaction="/solicitudes/borrador" formnovalidate>
+                    <svg class="icon"><use href="#i-save"/></svg>
+                    Guardar borrador
+                </button>
+                <button type="button" class="btn btn-primary" id="btnRevisar">
+                    <svg class="icon"><use href="#i-check-circle"/></svg>
+                    Revisar solicitud
+                </button>
+            </div>
+
+            <div class="modal-overlay" id="modalRevision" hidden>
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+                    <div class="modal-head">
+                        <div class="modal-brand">
+                            <svg class="icon icon-brand"><use href="#i-grid"/></svg>
+                            <span>Nuevo Horizonte</span>
+                        </div>
+                        <div>
+                            <span class="eyebrow">Revisión de solicitud</span>
+                            <h2 id="modalTitulo">Confirma los datos antes de enviar</h2>
+                        </div>
+                        <button type="button" class="modal-close" id="btnCerrarModal" aria-label="Cerrar">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="review-sections">
+                            <section class="review-section" id="secTipo">
+                                <header>
+                                    <svg class="icon"><use href="#i-file"/></svg>
+                                    <h3>Tipo de solicitud</h3>
+                                </header>
+                                <div class="review-value" id="rvTipo"></div>
+                            </section>
+                            <section class="review-section" id="secSolicitante">
+                                <header>
+                                    <svg class="icon"><use href="#i-user"/></svg>
+                                    <h3>Solicitante</h3>
+                                </header>
+                                <div class="review-grid-small">
+                                    <div class="review-item">
+                                        <span>Nombre</span>
+                                        <strong id="rvSolicitante"></strong>
+                                    </div>
+                                    <div class="review-item">
+                                        <span>Área</span>
+                                        <strong id="rvArea"></strong>
+                                    </div>
+                                </div>
+                            </section>
+                            <section class="review-section" id="secDetalle" id="rvInfoBloque">
+                                <header>
+                                    <svg class="icon"><use href="#i-file-text"/></svg>
+                                    <h3>Información solicitada</h3>
+                                </header>
+                                <div class="review-value" id="rvInfo"></div>
+                            </section>
+                            <section class="review-section" id="secModulos" id="rvModulosBloque" hidden>
+                                <header>
+                                    <svg class="icon"><use href="#i-layer"/></svg>
+                                    <h3>Módulos y accesos</h3>
+                                </header>
+                                <div class="review-chips" id="rvModulos"></div>
+                            </section>
+                            <section class="review-section" id="secVigencia" id="rvVigenciaBloque" hidden>
+                                <header>
+                                    <svg class="icon"><use href="#i-calendar"/></svg>
+                                    <h3>Vigencia</h3>
+                                </header>
+                                <div class="review-value" id="rvVigencia"></div>
+                            </section>
+                            <section class="review-section" id="secAdjunto">
+                                <header>
+                                    <svg class="icon"><use href="#i-paperclip"/></svg>
+                                    <h3>Adjunto</h3>
+                                </header>
+                                <div class="review-value" id="rvAdjunto"></div>
+                            </section>
+                            <section class="review-section" id="secMotivo">
+                                <header>
+                                    <svg class="icon"><use href="#i-message-square"/></svg>
+                                    <h3>Motivo</h3>
+                                </header>
+                                <div class="review-value" id="rvMotivo"></div>
+                            </section>
+                        </div>
+                    </div>
+                    <div class="modal-foot">
+                        <button type="button" class="btn btn-ghost" id="btnVolver">
+                            <svg class="icon"><use href="#i-arrow-left"/></svg>
+                            Volver
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="btnEnviarFinal">
+                            <svg class="icon"><use href="#i-send"/></svg>
+                            Enviar solicitud
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('solicitudForm');
+        const seccionInformacion = document.getElementById('seccionInformacion');
+        const seccionAcceso = document.getElementById('seccionAcceso');
+        const tipoInformacion = document.getElementById('tipoInformacion');
+        const recursoModulo = document.getElementById('recursoModulo');
+        const hintDetalle = document.getElementById('hintDetalle');
+        const permanente = document.getElementById('permanente');
+        const camposFechas = document.getElementById('camposFechas');
+        const fechaInicio = document.getElementById('fechaInicioAcceso');
+        const fechaFin = document.getElementById('fechaFinAcceso');
+        const contadorModulos = document.getElementById('contadorModulos');
+        const modal = document.getElementById('modalRevision');
+        const btnRevisar = document.getElementById('btnRevisar');
+        const btnCerrarModal = document.getElementById('btnCerrarModal');
+        const btnVolver = document.getElementById('btnVolver');
+        const btnEnviarFinal = document.getElementById('btnEnviarFinal');
+        const formError = document.getElementById('formError');
+        const formErrorTexto = document.getElementById('formErrorTexto');
+        const archivoInput = document.getElementById('archivo');
+        const archivoPreview = document.getElementById('archivoPreview');
+        const archivoNombre = document.getElementById('archivoNombre');
+        const btnQuitarArchivo = document.getElementById('btnQuitarArchivo');
+
+        let envioConfirmado = false;
+
+        function esAcceso() {
+            const seleccionado = document.querySelector('input[name="tipoSolicitud"]:checked');
+            return seleccionado && seleccionado.value === 'ACCESO';
+        }
+
+        function mostrarError(mensaje) {
+            formErrorTexto.textContent = mensaje;
+            formError.hidden = false;
+            formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function limpiarError() {
+            formError.hidden = true;
+            formErrorTexto.textContent = '';
+        }
+
+        function actualizarTipo() {
+            const acceso = esAcceso();
+            seccionInformacion.hidden = acceso;
+            seccionAcceso.hidden = !acceso;
+
+            // Campos de información
+            tipoInformacion.required = !acceso;
+            tipoInformacion.disabled = acceso;
+            recursoModulo.disabled = acceso;
+
+            // Campos de acceso
+            document.querySelectorAll('#seccionAcceso input, #seccionAcceso select').forEach(function (campo) {
+                campo.disabled = !acceso;
+            });
+
+            // Limpiar campos del otro tipo para evitar validaciones fantasmas
+            if (acceso) {
+                tipoInformacion.value = '';
+                recursoModulo.value = '';
+            } else {
+                // Limpiar checks de módulos
+                document.querySelectorAll('input[name="modulosAcceso"]').forEach(cb => cb.checked = false);
+                document.querySelectorAll('select[name^="nivelesModulo"]').forEach(sel => sel.value = 'LECTURA');
+                permanente.checked = false;
+                fechaInicio.value = '';
+                fechaFin.value = '';
+            }
+
+            actualizarVigencia();
+            actualizarDetalleInfo();
+            actualizarContador();
+            limpiarError();
+        }
+
+        function actualizarDetalleInfo() {
+            if (esAcceso()) return;
+            const esOtro = tipoInformacion.value === 'OTRO';
+            recursoModulo.required = esOtro;
+            hintDetalle.textContent = esOtro
+                ? 'Obligatorio: describe qué información necesitas.'
+                : 'Agrega una referencia si lo necesitas.';
+        }
+
+        function actualizarVigencia() {
+            if (!permanente) return;
+            const acceso = esAcceso();
+            const sinFecha = permanente.checked;
+            camposFechas.hidden = sinFecha;
+            fechaInicio.disabled = !acceso || sinFecha;
+            fechaFin.disabled = !acceso || sinFecha;
+        }
+
+        function actualizarContador() {
+            if (!contadorModulos) return;
+            const total = document.querySelectorAll('input[name="modulosAcceso"]:checked').length;
+            contadorModulos.textContent = total === 0
+                ? '0 módulos seleccionados'
+                : total + (total === 1 ? ' módulo seleccionado' : ' módulos seleccionados');
+        }
+
+        function moduloSeleccionado() {
+            return document.querySelectorAll('input[name="modulosAcceso"]:checked').length > 0;
+        }
+
+        function nombreInformacion() {
+            if (tipoInformacion.value === 'OTRO') {
+                return recursoModulo.value.trim() || 'Otro (sin detalle)';
+            }
+            const opcion = tipoInformacion.options[tipoInformacion.selectedIndex];
+            const base = opcion && tipoInformacion.value ? opcion.text : 'Sin especificar';
+            const detalle = recursoModulo.value.trim();
+            return detalle ? base + ' · ' + detalle : base;
+        }
+
+        function vigenciaTexto() {
+            if (permanente.checked) return 'Permanente (sin fecha de fin)';
+            if (fechaInicio.value && fechaFin.value) return 'Del ' + fechaInicio.value + ' al ' + fechaFin.value;
+            if (fechaInicio.value) return 'Desde ' + fechaInicio.value + ' · 30 días';
+            if (fechaFin.value) return 'Hasta ' + fechaFin.value;
+            return '30 días desde hoy';
+        }
+
+        function actualizarResumen() {
+            const acceso = esAcceso();
+            const nombre = document.getElementById('nombreSolicitante').value.trim();
+            const area = document.getElementById('areaActualTexto').textContent.trim();
+
+            document.getElementById('rvTipo').textContent = acceso ? 'Acceso a módulos' : 'Información';
+            document.getElementById('rvSolicitante').textContent = nombre || 'Sin nombre';
+            document.getElementById('rvArea').textContent = area || 'Sin área';
+            document.getElementById('rvAdjunto').textContent = archivoInput.files.length > 0
+                ? archivoInput.files[0].name : 'Sin adjunto';
+            document.getElementById('rvMotivo').textContent = document.getElementById('motivo').value.trim() || 'Sin motivo indicado';
+
+            document.getElementById('rvInfoBloque').hidden = acceso;
+            if (!acceso) document.getElementById('rvInfo').textContent = nombreInformacion();
+
+            document.getElementById('rvModulosBloque').hidden = !acceso;
+            document.getElementById('rvVigenciaBloque').hidden = !acceso;
+            if (acceso) {
+                const contenedor = document.getElementById('rvModulos');
+                contenedor.textContent = '';
+                document.querySelectorAll('.modulo-chip--select').forEach(function (chip) {
+                    const check = chip.querySelector('input[type="checkbox"]');
+                    const select = chip.querySelector('select');
+                    if (!check || !check.checked) return;
+                    const etiqueta = chip.querySelector('label span');
+                    const item = document.createElement('span');
+                    item.className = 'review-chip';
+                    item.textContent = (etiqueta ? etiqueta.textContent : 'Módulo')
+                        + ' · ' + (select && select.value === 'EDICION' ? 'Edición' : 'Lectura');
+                    contenedor.appendChild(item);
+                });
+                if (!contenedor.children.length) {
+                    const vacio = document.createElement('span');
+                    vacio.className = 'review-chip review-chip--vacio';
+                    vacio.textContent = 'Sin módulos seleccionados';
+                    contenedor.appendChild(vacio);
+                }
+                document.getElementById('rvVigencia').textContent = vigenciaTexto();
+            }
+        }
+
+        function abrirRevision() {
+            limpiarError();
+
+            // Validación nativa del navegador
+            if (!form.reportValidity()) {
+                // Forzar foco en el primer campo inválido
+                const invalid = form.querySelector(':invalid');
+                if (invalid) invalid.focus();
+                return;
+            }
+
+            // Validaciones extra
+            if (esAcceso()) {
+                if (!moduloSeleccionado()) {
+                    mostrarError('Selecciona al menos un módulo al que necesitas acceso.');
+                    return;
+                }
+            } else {
+                if (!tipoInformacion.value) {
+                    mostrarError('Indica qué documento o información necesitas.');
+                    tipoInformacion.focus();
+                    return;
+                }
+                if (tipoInformacion.value === 'OTRO' && !recursoModulo.value.trim()) {
+                    mostrarError('Describe qué información necesitas en "Detalle adicional".');
+                    recursoModulo.focus();
+                    return;
+                }
+            }
+
+            actualizarResumen();
+            modal.hidden = false;
+            document.body.classList.add('modal-open');
+            btnEnviarFinal.focus();
+        }
+
+        function cerrarRevision() {
+            modal.hidden = true;
+            document.body.classList.remove('modal-open');
+            btnRevisar.focus();
+        }
+
+        if (permanente) permanente.addEventListener('change', actualizarVigencia);
+        if (tipoInformacion) tipoInformacion.addEventListener('change', function () {
+            actualizarDetalleInfo();
+            actualizarResumen();
+        });
+
+        document.querySelectorAll('input[name="tipoSolicitud"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                actualizarTipo();
+                actualizarResumen();
+            });
+        });
+
+        document.querySelectorAll('input[name="modulosAcceso"]').forEach(function (check) {
+            check.addEventListener('change', function () {
+                actualizarContador();
+                actualizarResumen();
+            });
+        });
+
+        document.querySelectorAll('select[name^="nivelesModulo"]').forEach(function (select) {
+            select.addEventListener('change', actualizarResumen);
+        });
+
+        document.querySelectorAll('#solicitudForm input, #solicitudForm textarea').forEach(function (campo) {
+            campo.addEventListener('input', actualizarResumen);
+        });
+
+        if (archivoInput) {
+            archivoInput.addEventListener('change', function () {
+                if (archivoInput.files.length > 0) {
+                    archivoNombre.textContent = archivoInput.files[0].name;
+                    archivoPreview.hidden = false;
+                } else {
+                    archivoPreview.hidden = true;
+                }
+                actualizarResumen();
+            });
+        }
+        if (btnQuitarArchivo) {
+            btnQuitarArchivo.addEventListener('click', function () {
+                archivoInput.value = '';
+                archivoPreview.hidden = true;
+                actualizarResumen();
+            });
+        }
+
+        btnRevisar.addEventListener('click', abrirRevision);
+        if (btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarRevision);
+        if (btnVolver) btnVolver.addEventListener('click', cerrarRevision);
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) cerrarRevision();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modal.hidden) cerrarRevision();
+        });
+
+        btnEnviarFinal.addEventListener('click', function () {
+            envioConfirmado = true;
+        });
+
+        form.addEventListener('submit', function (event) {
+            if (!envioConfirmado) {
+                event.preventDefault();
+                abrirRevision();
+                return;
+            }
+            btnEnviarFinal.disabled = true;
+            btnEnviarFinal.textContent = 'Enviando...';
+        });
+
+        actualizarTipo();
+        actualizarResumen();
+    });
+</script>
 </body>
 </html>

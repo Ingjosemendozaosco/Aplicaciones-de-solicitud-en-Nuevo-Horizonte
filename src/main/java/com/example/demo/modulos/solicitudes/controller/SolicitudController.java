@@ -7,6 +7,7 @@ import com.example.demo.modulos.gestionUsuariosRolesPermisos.service.CargoFormal
 import com.example.demo.modulos.solicitudes.dto.SolicitudDecisionDTO;
 import com.example.demo.modulos.solicitudes.dto.SolicitudPropuestaDTO;
 import com.example.demo.modulos.solicitudes.dto.SolicitudRequestDTO;
+import com.example.demo.modulos.solicitudes.dto.SolicitudResponseDTO;
 import com.example.demo.modulos.solicitudes.entity.EstadoSolicitud;
 import com.example.demo.modulos.solicitudes.entity.Solicitud;
 import com.example.demo.modulos.solicitudes.entity.TipoSolicitud;
@@ -104,6 +105,19 @@ public class SolicitudController {
             return "redirect:/solicitudes/nueva";
         }
         return "redirect:/solicitudes";
+    }
+
+    @GetMapping("/lista-aprobados")
+    public String listarAprobados(Authentication authentication, Model model) {
+        List<String> roles = rolesDe(authentication);
+        boolean puedeVer = roles.contains("Area de Producto") || roles.contains("Area de Ventas");
+        List<SolicitudResponseDTO> solicitudes = puedeVer
+                ? solicitudService.listarPorEstado(com.example.demo.modulos.solicitudes.entity.EstadoSolicitud.APROBADA)
+                : List.of();
+        model.addAttribute("solicitudes", solicitudes);
+        model.addAttribute("total", solicitudes.size());
+        model.addAttribute("puedeVer", podeVer);
+        return "solicitudes/lista-aprobados";
     }
 
     @GetMapping
@@ -210,10 +224,13 @@ public class SolicitudController {
 
     private String obtenerAreaPorUsuario(Authentication authentication) {
         List<String> roles = rolesDe(authentication);
-        return roles.stream()
+        List<String> areas = roles.stream()
                 .filter(JERARQUIA::contains)
-                .findFirst()
-                .orElse("Administración");
+                .collect(Collectors.toList());
+        if (areas.isEmpty()) {
+            return "Administración";
+        }
+        return String.join(", ", areas);
     }
 
     private static Map<String, String> nivelesAcceso() {
