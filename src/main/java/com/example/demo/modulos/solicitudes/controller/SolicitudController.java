@@ -116,7 +116,7 @@ public class SolicitudController {
                 : List.of();
         model.addAttribute("solicitudes", solicitudes);
         model.addAttribute("total", solicitudes.size());
-        model.addAttribute("puedeVer", podeVer);
+        model.addAttribute("puedeVer", puedeVer);
         return "solicitudes/lista-aprobados";
     }
 
