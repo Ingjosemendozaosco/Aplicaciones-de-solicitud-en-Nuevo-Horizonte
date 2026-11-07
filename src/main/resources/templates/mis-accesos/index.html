@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mis accesos - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main id="contenido" tabindex="-1" class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-unlock"/></svg>
+                Seguridad de mi cuenta
+            </span>
+            <h1>Mis accesos</h1>
+            <p class="subtitle">Consulta los módulos habilitados, su nivel, vigencia y días restantes.</p>
+        </div>
+        <a th:href="@{/solicitudes/nueva}" class="btn btn-primary"
+           sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Administración')">
+            <svg class="icon"><use href="#i-plus"/></svg>
+            Solicitar renovación
+        </a>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--blue"><svg class="icon"><use href="#i-key"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalAccesos}">0</span>
+                <span class="stat-label">Accesos registrados</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--success"><svg class="icon"><use href="#i-check"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalVigentes}">0</span>
+                <span class="stat-label">Vigentes</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--warn"><svg class="icon"><use href="#i-timer"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalPorVencer}">0</span>
+                <span class="stat-label">Por vencer (≤ 7 días)</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon stat-icon--danger"><svg class="icon"><use href="#i-alert"/></svg></span>
+            <div>
+                <span class="stat-value" th:text="${totalVencidos}">0</span>
+                <span class="stat-label">Vencidos</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="card card--table" th:if="${!#lists.isEmpty(accesos)}">
+        <div class="table-toolbar">
+            <h2 class="card-title" style="margin:0;">
+                <svg class="icon"><use href="#i-layer"/></svg>
+                Detalle de accesos
+            </h2>
+            <span class="table-count" th:text="|Actualizado al ${hoy}|"></span>
+        </div>
+        <div class="table-wrap">
+            <table class="solicitudes-table">
+                <thead>
+                <tr>
+                    <th>Módulo</th>
+                    <th>Rol</th>
+                    <th>Nivel</th>
+                    <th>Vigencia</th>
+                    <th>Días restantes</th>
+                    <th>Estado</th>
+                    <th>Origen</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${accesos}">
+                    <td>
+                        <div class="cell-user">
+                            <span class="avatar-initial" th:style="|background:${a.color}22;color:${a.color};|">
+                                <svg class="icon icon-xs"><use href="#i-layer"/></svg>
+                            </span>
+                            <strong th:text="${a.moduloLegible}"></strong>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="role-chip" th:style="|border-color:${a.color}55;color:${a.color};|"
+                              th:text="${a.rol}"></span>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${a.nivel == 'Edición' ? 'aprobada' : 'pendiente'}"
+                              th:text="${a.nivel}"></span>
+                    </td>
+                    <td class="cell-date">
+                        <span th:if="${a.permanente}">Permanente</span>
+                        <span th:unless="${a.permanente}">
+                            <span th:if="${a.fechaInicio != null}"
+                                  th:text="${#temporals.format(a.fechaInicio, 'dd/MM/yyyy')}"></span>
+                            <span> — </span>
+                            <span th:if="${a.fechaFin != null}"
+                                  th:text="${#temporals.format(a.fechaFin, 'dd/MM/yyyy')}"></span>
+                        </span>
+                    </td>
+                    <td>
+                        <span th:if="${a.permanente}" class="muted">Sin fecha de fin</span>
+                        <span th:if="${!a.permanente && a.estado == 'vencido' && a.diasRestantes > 0}"
+                              th:text="|Venció hace ${a.diasRestantes} días|"></span>
+                        <span th:if="${!a.permanente && a.estado == 'vencido' && a.diasRestantes == 0}">Venció hoy</span>
+                        <span th:if="${!a.permanente && a.estado == 'vigente'}"
+                              th:text="|${a.diasRestantes} días|"></span>
+                        <span th:if="${a.estado == 'por_vencer'}"
+                              th:text="${a.diasRestantes == 0 ? 'Vence hoy' : a.diasRestantes + ' días'}"></span>
+                    </td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${a.estado == 'vigente' ? 'aprobada' : (a.estado == 'por_vencer' ? 'pendiente' : 'rechazada')}"
+                              th:text="${a.estado == 'vigente' ? 'VIGENTE' : (a.estado == 'por_vencer' ? 'POR VENCER' : 'VENCIDO')}"></span>
+                    </td>
+                    <td th:text="${a.origenSolicitud != null ? a.origenSolicitud : '—'}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card" th:if="${#lists.isEmpty(accesos)}">
+        <div class="empty">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-lock"/></svg>
+            </div>
+            <h2>Sin accesos registrados</h2>
+            <p>Tu cuenta no tiene accesos a módulos. Solicita acceso al área correspondiente.</p>
+            <a th:href="@{/solicitudes/nueva}" class="btn btn-primary" style="margin-top:16px;"
+               sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Administración')">
+                <svg class="icon"><use href="#i-plus"/></svg>
+                Crear solicitud
+            </a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -13,5 +13,5 @@ public interface RolPermisoRepository extends JpaRepository<RolPermiso, Long> {
 
     Optional<RolPermiso> findByRolIdAndModulo(Long idRol, String modulo);
 
-    List<RolPermiso> findByActivoTrueAndFechaFinIsNotNullAndFechaFinBefore(LocalDate fecha);
+    List<RolPermiso> findByActivoTrueAndFechaFinIsNotNullAndFechaFinLessThanEqual(LocalDate fecha);
 }

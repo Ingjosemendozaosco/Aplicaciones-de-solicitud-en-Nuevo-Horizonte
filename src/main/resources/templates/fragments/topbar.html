@@ -24,30 +24,53 @@
             <svg class="icon"><use href="#i-plus"/></svg>
             Nueva
         </a>
-        <a sec:authorize="hasRole('Gerencia')" th:href="@{/usuarios}">
-            <svg class="icon"><use href="#i-users"/></svg>
-            Usuarios
-        </a>
-        <a sec:authorize="hasRole('Gerencia')" th:href="@{/roles}">
-            <svg class="icon"><use href="#i-key"/></svg>
-            Roles
-        </a>
-        <a sec:authorize="hasRole('Gerencia')" th:href="@{/documentos}">
-            <svg class="icon"><use href="#i-file"/></svg>
-            Documentos
-        </a>
-        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')" th:href="@{/solicitudes/lista-aprobados}">
-            <svg class="icon"><use href="#i-check"/></svg>
-            Archivos aprobados
-        </a>
-        <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/disponibles}">
-            <svg class="icon"><use href="#i-grid"/></svg>
-            Disponibles
-        </a>
-        <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/reportes}">
-            <svg class="icon"><use href="#i-chart"/></svg>
-            Reportes
-        </a>
+
+        <details class="nav-more" id="navMore">
+            <summary class="nav-btn nav-more__trigger" title="Más opciones">
+                <svg class="icon"><use href="#i-more-horizontal"/></svg>
+                Más
+            </summary>
+            <div class="nav-menu">
+                <span class="nav-menu__title">Solicitudes</span>
+                <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')"
+                   th:href="@{/solicitudes/lista-aprobados}">
+                    <svg class="icon"><use href="#i-check"/></svg>
+                    <span>Archivos aprobados</span>
+                </a>
+                <a sec:authorize="isAuthenticated()" th:href="@{/disponibles}">
+                    <svg class="icon"><use href="#i-layer"/></svg>
+                    <span>Documentos y módulos disponibles</span>
+                </a>
+                <a th:href="@{/mis-accesos}" sec:authorize="isAuthenticated()">
+                    <svg class="icon"><use href="#i-unlock"/></svg>
+                    <span>Mis accesos</span>
+                </a>
+
+                <span sec:authorize="hasAnyRole('Administración','Gerencia')"
+                      class="nav-menu__title">Gestión</span>
+                <a sec:authorize="hasRole('Gerencia')" th:href="@{/usuarios}">
+                    <svg class="icon"><use href="#i-users"/></svg>
+                    <span>Usuarios</span>
+                </a>
+                <a sec:authorize="hasRole('Gerencia')" th:href="@{/roles}">
+                    <svg class="icon"><use href="#i-key"/></svg>
+                    <span>Roles</span>
+                </a>
+                <a sec:authorize="hasRole('Gerencia')" th:href="@{/documentos}">
+                    <svg class="icon"><use href="#i-file"/></svg>
+                    <span>Documentos</span>
+                </a>
+                <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/reportes}">
+                    <svg class="icon"><use href="#i-chart"/></svg>
+                    <span>Reportes</span>
+                </a>
+                <a sec:authorize="hasAnyRole('Administración','Gerencia')" th:href="@{/auditoria}">
+                    <svg class="icon"><use href="#i-history"/></svg>
+                    <span>Auditoría</span>
+                </a>
+            </div>
+        </details>
+
         <a th:href="@{/notificaciones}" class="nav-bell" sec:authorize="isAuthenticated()"
            title="Notificaciones">
             <svg class="icon"><use href="#i-bell"/></svg>
@@ -59,6 +82,12 @@
             <svg class="icon"><use href="#i-user"/></svg>
             Mi perfil
         </a>
+        <button type="button" class="nav-btn theme-toggle" id="themeToggle"
+                aria-label="Cambiar entre modo claro y oscuro" title="Cambiar tema">
+            <svg class="icon icon-moon"><use href="#i-moon"/></svg>
+            <svg class="icon icon-sun"><use href="#i-sun"/></svg>
+            <span class="theme-toggle__text">Tema</span>
+        </button>
         <button type="button" class="nav-btn"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
             <svg class="icon"><use href="#i-logout"/></svg>
@@ -67,6 +96,54 @@
     </nav>
 
     <form id="logout-form" th:action="@{/logout}" method="post" hidden></form>
+
+    <script>
+        (function () {
+            var mas = document.getElementById('navMore');
+            if (!mas) {
+                return;
+            }
+            document.addEventListener('click', function (evento) {
+                if (mas.open && !mas.contains(evento.target)) {
+                    mas.open = false;
+                }
+            });
+            document.addEventListener('keydown', function (evento) {
+                if (evento.key === 'Escape' && mas.open) {
+                    mas.open = false;
+                    var disparador = mas.querySelector('summary');
+                    if (disparador) {
+                        disparador.focus();
+                    }
+                }
+            });
+        })();
+    </script>
+
+    <script>
+        (function () {
+            var boton = document.getElementById('themeToggle');
+            if (!boton) {
+                return;
+            }
+            function actualizarEtiqueta() {
+                var oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+                boton.setAttribute('aria-label', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+                boton.setAttribute('title', oscuro ? 'Activar modo claro' : 'Activar modo oscuro');
+            }
+            boton.addEventListener('click', function () {
+                var actual = document.documentElement.getAttribute('data-theme') === 'dark'
+                    ? 'dark' : 'light';
+                var nuevo = actual === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', nuevo);
+                try {
+                    localStorage.setItem('nh-theme', nuevo);
+                } catch (e) {}
+                actualizarEtiqueta();
+            });
+            actualizarEtiqueta();
+        })();
+    </script>
 </header>
 </body>
 </html>

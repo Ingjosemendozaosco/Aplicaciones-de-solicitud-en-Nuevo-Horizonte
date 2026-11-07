@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Disponibles - Nuevo Horizonte</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container">
+<main id="contenido" tabindex="-1" class="container">
     <div class="page-head">
         <div>
             <span class="eyebrow">
@@ -53,26 +63,54 @@
                   th:text="|${#lists.size(documentos)} documentos|"></span>
         </div>
 
-        <div class="catalogo-docs" th:if="${!#lists.isEmpty(documentos)}">
-            <article class="catalogo-doc" th:each="d : ${documentos}"
-                     th:classappend="${!d.activo} ? 'catalogo-doc--inactivo' : ''">
-                <div class="catalogo-doc__top">
-                    <span class="catalogo-doc__cat"
-                          th:text="${d.categoria != null ? d.categoria : 'Sin categoría'}"></span>
-                    <span class="badge"
-                          th:classappend="${d.activo} ? 'aprobada' : 'rechazada'"
-                          th:text="${d.activo ? 'Activo' : 'Inactivo'}"></span>
-                </div>
-                <h3 th:text="${d.nombre}"></h3>
-                <p th:if="${d.descripcion != null}" th:text="${d.descripcion}"></p>
-                <div class="catalogo-doc__meta">
-                    <span th:if="${d.subidoPor != null}" th:text="|Publicado por ${d.subidoPor}|"></span>
-                    <span th:text="${d.fechaSubida != null ? #strings.substring(d.fechaSubida.toString(), 0, 10) : '—'}"></span>
-                </div>
-                <a th:href="@{'/disponibles/' + ${d.id} + '/archivo'}" target="_blank">
-                    <svg class="icon icon-xs"><use href="#i-file"/></svg>
-                    Ver archivo
+        <div class="doc-grid" th:if="${!#lists.isEmpty(documentos)}">
+            <article class="doc-card" th:each="d : ${documentos}"
+                     th:classappend="${!d.activo} ? 'doc-card--inactivo' : ''">
+
+                <a class="doc-card__preview"
+                   th:href="@{'/disponibles/' + ${d.id} + '/archivo'}"
+                   target="_blank" rel="noopener"
+                   th:title="|Abrir ${d.nombreArchivo}|">
+                    <img th:if="${d.tipoArchivo != null and d.tipoArchivo.startsWith('image/')}"
+                         th:src="@{'/disponibles/' + ${d.id} + '/archivo'}"
+                         th:alt="${d.nombre}"
+                         loading="lazy">
+                    <iframe th:if="${d.tipoArchivo != null and d.tipoArchivo.contains('pdf')}"
+                            th:src="@{'/disponibles/' + ${d.id} + '/archivo'}"
+                            loading="lazy"
+                            th:title="|Vista previa de ${d.nombre}|"></iframe>
+                    <span class="doc-card__file"
+                          th:if="${d.tipoArchivo == null or (!d.tipoArchivo.startsWith('image/') and !d.tipoArchivo.contains('pdf'))}">
+                        <svg class="icon"><use href="#i-file-text"/></svg>
+                        <em th:text="${d.nombreArchivo != null ? d.nombreArchivo.substring(d.nombreArchivo.lastIndexOf('.') + 1).toUpperCase() : 'ARCHIVO'}">PDF</em>
+                    </span>
+                    <span class="doc-card__overlay">
+                        <svg class="icon icon-xs"><use href="#i-arrow-up-right"/></svg>
+                        Abrir archivo
+                    </span>
                 </a>
+
+                <div class="doc-card__body">
+                    <div class="doc-card__tags">
+                        <span class="catalogo-doc__cat"
+                              th:text="${d.categoria != null ? d.categoria : 'Sin categoría'}"></span>
+                        <span class="badge"
+                              th:classappend="${d.activo} ? 'aprobada' : 'rechazada'"
+                              th:text="${d.activo ? 'Activo' : 'Inactivo'}"></span>
+                    </div>
+                    <h3 th:text="${d.nombre}">Documento</h3>
+                    <p th:if="${d.descripcion != null}" th:text="${d.descripcion}"></p>
+                    <div class="doc-card__meta">
+                        <span th:if="${d.subidoPor != null}" th:text="|Publicado por ${d.subidoPor}|"></span>
+                        <span th:text="${d.fechaSubida != null ? #strings.substring(d.fechaSubida.toString(), 0, 10) : '—'}"></span>
+                    </div>
+                    <a class="doc-card__link"
+                       th:href="@{'/disponibles/' + ${d.id} + '/archivo'}"
+                       target="_blank" rel="noopener">
+                        <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                        Ver archivo
+                    </a>
+                </div>
             </article>
         </div>
 
@@ -103,7 +141,7 @@
                     <span class="area-count" th:text="|${#lists.size(a.modulos)} módulos|"></span>
                 </header>
                 <ul>
-                    <li th:each="mod : ${a.modulos}" th:text="${mod}"></li>
+                    <li th:each="modulo : ${a.modulos}" th:text="${modulo}"></li>
                 </ul>
             </article>
         </div>

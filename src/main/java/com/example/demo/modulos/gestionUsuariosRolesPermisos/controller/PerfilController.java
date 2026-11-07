@@ -1,7 +1,9 @@
 package com.example.demo.modulos.gestionUsuariosRolesPermisos.controller;
 
 import com.example.demo.modulos.ModuloCatalogo;
+import com.example.demo.modulos.gestionUsuariosRolesPermisos.dto.AccesoUsuarioDTO;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.Rol;
+import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.RolPermiso;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.Usuario;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.service.CargoFormal;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.service.ColoresRol;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -84,5 +88,70 @@ public class PerfilController {
         model.addAttribute("totalModulos", totalModulos);
         model.addAttribute("recientes", solicitudes.stream().limit(4).toList());
         return "perfil/index";
+    }
+
+    @GetMapping("/mis-accesos")
+    public String misAccesos(Authentication authentication, Model model) {
+        Usuario usuario = usuarioService.perfil(authentication.getName());
+        LocalDate hoy = LocalDate.now();
+        List<AccesoUsuarioDTO> accesos = new ArrayList<>();
+
+        for (Rol rol : usuario.rolesVigentes()) {
+            for (RolPermiso permiso : rol.getRolPermisos()) {
+                boolean tieneAcceso = permiso.isPuedeLeer() || permiso.isPuedeCrear()
+                        || permiso.isPuedeActualizar() || permiso.isPuedeEliminar();
+                if (!tieneAcceso) {
+                    continue;
+                }
+                if (!permiso.isActivo() && permiso.getFechaFin() == null) {
+                    continue;
+                }
+                AccesoUsuarioDTO dto = new AccesoUsuarioDTO();
+                dto.setModulo(permiso.getModulo());
+                dto.setModuloLegible(ModuloCatalogo.etiqueta(permiso.getModulo()));
+                dto.setRol(rol.getNombre());
+                dto.setColor(ColoresRol.colorDe(rol));
+                boolean edicion = permiso.isPuedeCrear() || permiso.isPuedeActualizar()
+                        || permiso.isPuedeEliminar();
+                dto.setNivel(edicion ? "Edición" : "Lectura");
+                dto.setFechaInicio(permiso.getFechaInicio());
+                dto.setFechaFin(permiso.getFechaFin());
+                dto.setPermanente(permiso.getFechaFin() == null);
+                dto.setOrigenSolicitud(permiso.getOrigenSolicitud());
+
+                boolean vencido = !permiso.isActivo()
+                        || (permiso.getFechaFin() != null && permiso.getFechaFin().isBefore(hoy));
+                if (vencido) {
+                    dto.setEstado("vencido");
+                    dto.setDiasRestantes(permiso.getFechaFin() != null
+                            ? Math.abs(ChronoUnit.DAYS.between(hoy, permiso.getFechaFin())) : 0);
+                } else if (permiso.getFechaFin() == null) {
+                    dto.setEstado("vigente");
+                    dto.setDiasRestantes(-1);
+                } else {
+                    long dias = ChronoUnit.DAYS.between(hoy, permiso.getFechaFin());
+                    dto.setDiasRestantes(dias);
+                    dto.setEstado(dias <= 7 ? "por_vencer" : "vigente");
+                }
+                accesos.add(dto);
+            }
+        }
+
+        accesos.sort(Comparator
+                .comparing((AccesoUsuarioDTO a) -> "vencido".equals(a.getEstado()))
+                .thenComparing(a -> a.getFechaFin() != null
+                        ? a.getFechaFin() : LocalDate.MAX)
+                .thenComparing(AccesoUsuarioDTO::getModuloLegible));
+
+        model.addAttribute("accesos", accesos);
+        model.addAttribute("totalAccesos", accesos.size());
+        model.addAttribute("totalVigentes", accesos.stream()
+                .filter(a -> "vigente".equals(a.getEstado())).count());
+        model.addAttribute("totalPorVencer", accesos.stream()
+                .filter(a -> "por_vencer".equals(a.getEstado())).count());
+        model.addAttribute("totalVencidos", accesos.stream()
+                .filter(a -> "vencido".equals(a.getEstado())).count());
+        model.addAttribute("hoy", hoy);
+        return "mis-accesos/index";
     }
 }

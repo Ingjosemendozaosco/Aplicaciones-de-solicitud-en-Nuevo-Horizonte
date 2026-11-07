@@ -1,309 +1,507 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Nueva Solicitud - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container container--form">
+<main id="contenido" tabindex="-1" class="container container--form-wide">
     <a th:href="@{/solicitudes}" class="back-link">
         <svg class="icon"><use href="#i-arrow-left"/></svg>
         Volver a solicitudes
     </a>
 
-    <div class="page-head page-head--solicitudes">
-        <div>
+    <section class="form-hero">
+        <span class="form-hero__icon">
+            <svg class="icon"><use href="#i-file-text"/></svg>
+        </span>
+        <div class="form-hero__body">
             <span class="eyebrow">
-                <svg class="icon"><use href="#i-file"/></svg>
+                <svg class="icon"><use href="#i-plus"/></svg>
                 Registro
             </span>
             <h1>Nueva solicitud</h1>
-            <p class="subtitle">Solicita información o acceso. Revisa el resumen antes de enviarlo.</p>
+            <p>Solicita información o acceso a módulos. Completa los datos, revisa el resumen y envíala al flujo de aprobación.</p>
+            <div class="form-hero__meta">
+                <span class="form-hero__pill">
+                    <svg class="icon"><use href="#i-building"/></svg>
+                    <span th:text="${areaActual}">Área</span>
+                </span>
+                <span class="form-hero__pill">
+                    <svg class="icon"><use href="#i-user"/></svg>
+                    <span th:text="${solicitud.nombreSolicitante}">Solicitante</span>
+                </span>
+                <span class="form-hero__pill">
+                    <svg class="icon"><use href="#i-shield-check"/></svg>
+                    <span>Con revisión y aprobación</span>
+                </span>
+                <span class="form-hero__pill">
+                    <svg class="icon"><use href="#i-save"/></svg>
+                    <span>Puedes guardar un borrador</span>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <div class="alert alert-success" th:if="${tieneTodo}" role="status" aria-live="polite">
+        <svg class="icon"><use href="#i-check-circle"/></svg>
+        <span>
+            <strong>Ya tienes todos los módulos y documentos disponibles.</strong>
+            No hay accesos ni documentos pendientes por solicitar con tu rol actual.
+            Si necesitas algo distinto, elige la opción «Otro» en la solicitud de información.
+        </span>
+    </div>
+
+    <div class="steps form-steps" id="formSteps">
+        <div class="step active">
+            <span class="step-ico"><svg class="icon"><use href="#i-grid"/></svg></span>
+            <span class="step-text">
+                <strong>Tipo</strong>
+                <small>Qué necesitas</small>
+            </span>
+        </div>
+        <div class="step">
+            <span class="step-ico"><svg class="icon"><use href="#i-user"/></svg></span>
+            <span class="step-text">
+                <strong>Solicitante</strong>
+                <small>Tus datos</small>
+            </span>
+        </div>
+        <div class="step">
+            <span class="step-ico"><svg class="icon"><use href="#i-file-text"/></svg></span>
+            <span class="step-text">
+                <strong>Detalle</strong>
+                <small>Información o accesos</small>
+            </span>
+        </div>
+        <div class="step">
+            <span class="step-ico"><svg class="icon"><use href="#i-paperclip"/></svg></span>
+            <span class="step-text">
+                <strong>Adjunto y envío</strong>
+                <small>Revisión final</small>
+            </span>
         </div>
     </div>
 
-    <section class="card card--form card--form-simple">
-        <div th:if="${error}" class="alert alert-error">
-            <svg class="icon"><use href="#i-alert"/></svg>
-            <span th:text="${error}"></span>
-        </div>
+    <div class="alert alert-info" th:if="${solicitudOrigen}" role="status" aria-live="polite">
+        <svg class="icon"><use href="#i-copy"/></svg>
+        <span>
+            Estás creando una solicitud similar a
+            <strong th:text="${solicitudOrigen}"></strong>.
+            Revisa los datos precargados y ajusta lo que necesites.
+        </span>
+    </div>
 
-        <form id="solicitudForm" class="form-simple" th:action="@{/solicitudes}" method="post"
-              th:object="${solicitud}" enctype="multipart/form-data">
-
-            <div class="form-block">
-                <div class="block-head">
-                    <span class="section-num">01</span>
-                    <div>
-                        <h2 class="block-title">Tipo de solicitud</h2>
-                        <p class="block-sub">Elige qué necesitas.</p>
-                    </div>
-                </div>
-                <div class="tipo-switch">
-                    <label class="tipo-option">
-                        <input type="radio" th:field="*{tipoSolicitud}" value="INFORMACION">
-                        <span class="tipo-icon">
-                            <svg class="icon"><use href="#i-file"/></svg>
-                        </span>
-                        <span>
-                            <strong>Información</strong>
-                            <span>Un documento, reporte o dato del sistema.</span>
-                        </span>
-                    </label>
-                    <label class="tipo-option">
-                        <input type="radio" th:field="*{tipoSolicitud}" value="ACCESO">
-                        <span class="tipo-icon">
-                            <svg class="icon"><use href="#i-key"/></svg>
-                        </span>
-                        <span>
-                            <strong>Acceso a módulos</strong>
-                            <span>Permiso de lectura o edición sobre módulos.</span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-block">
-                <div class="block-head">
-                    <span class="section-num">02</span>
-                    <div>
-                        <h2 class="block-title">Solicitante</h2>
-                    </div>
-                </div>
-                <div class="grid">
-                    <div class="field">
-                        <label for="nombreSolicitante">Nombre completo</label>
-                        <input id="nombreSolicitante" type="text" th:field="*{nombreSolicitante}"
-                               placeholder="Nombre completo" maxlength="120" required>
-                    </div>
-                    <div class="field">
-                        <label>Área solicitante</label>
-                        <div class="readonly-chip">
-                            <svg class="icon icon-xs"><use href="#i-building"/></svg>
-                            <span id="areaActualTexto" th:text="${areaActual}"></span>
-                        </div>
-                        <input type="hidden" th:field="*{areaSolicitante}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-block">
-                <div class="block-head">
-                    <span class="section-num">03</span>
-                    <div>
-                        <h2 class="block-title">Detalle</h2>
-                    </div>
+    <div class="form-layout">
+        <div class="form-main">
+            <section class="card card--form card--form-simple">
+                <div th:if="${error}" class="alert alert-error" role="alert" aria-live="assertive">
+                    <svg class="icon"><use href="#i-alert"/></svg>
+                    <span th:text="${error}"></span>
                 </div>
 
-                <div id="seccionInformacion">
-                    <div class="field full">
-                        <label for="tipoInformacion">¿Qué documento o información necesitas?</label>
-                        <select id="tipoInformacion" th:field="*{tipoInformacion}" required>
-                            <option value="">Selecciona una opción</option>
-                            <option th:each="doc : ${documentosDisponibles}" th:value="${doc.nombre}"
-                                    th:text="${doc.categoria != null ? doc.nombre + ' · ' + doc.categoria : doc.nombre}"></option>
-                            <option value="OTRO">Otro (especificar)</option>
-                        </select>
-                        <p class="form-hint" th:if="${#lists.isEmpty(documentosDisponibles)}">
-                            Gerencia aún no ha publicado documentos. Selecciona "Otro" y descríbelo.
-                        </p>
-                    </div>
-                    <div class="field full" id="campoDetalleInfo">
-                        <label for="recursoModulo">Detalle adicional <span class="optional">Opcional</span></label>
-                        <input id="recursoModulo" type="text" th:field="*{recursoModulo}"
-                               placeholder="Ej: ventas de septiembre" maxlength="120">
-                        <p class="form-hint" id="hintDetalle">Agrega una referencia si lo necesitas.</p>
-                    </div>
+                <div class="form-tip">
+                    <svg class="icon"><use href="#i-info"/></svg>
+                    <span>Los campos marcados con <strong>*</strong> son obligatorios. Antes de enviar podrás revisar todos los datos en una ventana de confirmación.</span>
                 </div>
 
-                <div id="seccionAcceso" hidden>
-                    <div class="field full">
-                        <label>Módulos y nivel de acceso</label>
-                        <div class="modulos-grid">
-                            <div class="modulo-chip modulo-chip--select" th:each="entry : ${modulos}">
-                                <label>
-                                    <input type="checkbox" th:field="*{modulosAcceso}" th:value="${entry.key}">
-                                    <span th:text="${entry.value}"></span>
-                                </label>
-                                <select th:name="'nivelesModulo[' + ${entry.key} + ']'"
-                                        th:aria-label="'Nivel de acceso para ' + ${entry.value}">
-                                    <option value="LECTURA">Lectura</option>
-                                    <option value="EDICION">Edición</option>
-                                </select>
+                <form id="solicitudForm" class="form-simple" th:action="@{/solicitudes}" method="post"
+                      th:object="${solicitud}" enctype="multipart/form-data"
+                      th:attr="data-sin-modulos=${sinModulos}">
+
+                    <div class="form-block">
+                        <div class="block-head">
+                            <span class="section-num">01</span>
+                            <div>
+                                <h2 class="block-title">
+                                    <svg class="icon"><use href="#i-grid"/></svg>
+                                    Tipo de solicitud
+                                </h2>
+                                <p class="block-sub">Elige qué necesitas para mostrarte solo los campos necesarios.</p>
                             </div>
                         </div>
-                        <p class="form-hint" id="contadorModulos">0 módulos seleccionados</p>
-                    </div>
-
-                    <div class="switch-card">
-                        <label class="form-check">
-                            <input type="checkbox" id="permanente" th:field="*{permanente}">
-                            <span>
-                                <strong>Acceso permanente</strong>
-                                <small>Sin fecha de fin. Se mantiene hasta que se revoque.</small>
-                            </span>
-                        </label>
-                    </div>
-
-                    <div class="grid" id="camposFechas" style="margin-top:.9rem;">
-                        <div class="field">
-                            <label for="fechaInicioAcceso">Fecha de inicio</label>
-                            <input id="fechaInicioAcceso" type="date" th:field="*{fechaInicioAcceso}">
+                        <div class="tipo-switch">
+                            <label class="tipo-option">
+                                <input type="radio" th:field="*{tipoSolicitud}" value="INFORMACION">
+                                <span class="tipo-icon">
+                                    <svg class="icon"><use href="#i-file-text"/></svg>
+                                </span>
+                                <span>
+                                    <strong>Información</strong>
+                                    <span>Un documento, reporte o dato del sistema.</span>
+                                </span>
+                            </label>
+                            <label class="tipo-option">
+                                <input type="radio" th:field="*{tipoSolicitud}" value="ACCESO">
+                                <span class="tipo-icon">
+                                    <svg class="icon"><use href="#i-key"/></svg>
+                                </span>
+                                <span>
+                                    <strong>Acceso a módulos</strong>
+                                    <span>Permiso de lectura o edición sobre módulos.</span>
+                                </span>
+                            </label>
                         </div>
-                        <div class="field">
-                            <label for="fechaFinAcceso">Fecha de fin <span class="optional">Opcional</span></label>
-                            <input id="fechaFinAcceso" type="date" th:field="*{fechaFinAcceso}">
-                        </div>
                     </div>
-                    <p class="form-hint">Si no indicas fecha de fin, el acceso dura 30 días.</p>
-                </div>
 
-                <div class="field full" style="margin-top:1rem;">
-                    <label for="motivo">Motivo</label>
-                    <textarea id="motivo" th:field="*{motivo}"
-                              placeholder="Explica brevemente para qué necesitas esto" required></textarea>
-                </div>
-            </div>
-
-            <div class="form-block">
-                <div class="block-head">
-                    <span class="section-num">04</span>
-                    <div>
-                        <h2 class="block-title">Adjunto <span class="optional">Opcional</span></h2>
-                        <p class="block-sub">Puedes adjuntar un archivo de respaldo.</p>
-                    </div>
-                </div>
-                <div class="file-row">
-                    <input id="archivo" type="file" name="archivo"
-                           accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-                    <span class="file-chip" id="archivoPreview" hidden>
-                        <svg class="icon icon-xs"><use href="#i-file"/></svg>
-                        <span id="archivoNombre"></span>
-                        <button type="button" id="btnQuitarArchivo" title="Quitar archivo">&times;</button>
-                    </span>
-                </div>
-                <p class="form-hint">PDF, Word, Excel, texto o imágenes. Máximo 10 MB.</p>
-            </div>
-
-            <div class="form-alert" id="formError" hidden>
-                <svg class="icon"><use href="#i-alert"/></svg>
-                <span id="formErrorTexto"></span>
-            </div>
-
-            <div class="actions actions--simple">
-                <a th:href="@{/solicitudes}" class="btn btn-secondary">
-                    <svg class="icon"><use href="#i-arrow-left"/></svg>
-                    Cancelar
-                </a>
-                <button type="submit" class="btn btn-secondary" formaction="/solicitudes/borrador" formnovalidate>
-                    <svg class="icon"><use href="#i-save"/></svg>
-                    Guardar borrador
-                </button>
-                <button type="button" class="btn btn-primary" id="btnRevisar">
-                    <svg class="icon"><use href="#i-check-circle"/></svg>
-                    Revisar solicitud
-                </button>
-            </div>
-
-            <div class="modal-overlay" id="modalRevision" hidden>
-                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
-                    <div class="modal-head">
-                        <div class="modal-brand">
-                            <svg class="icon icon-brand"><use href="#i-grid"/></svg>
-                            <span>Nuevo Horizonte</span>
-                        </div>
-                        <div>
-                            <span class="eyebrow">Revisión de solicitud</span>
-                            <h2 id="modalTitulo">Confirma los datos antes de enviar</h2>
-                        </div>
-                        <button type="button" class="modal-close" id="btnCerrarModal" aria-label="Cerrar">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="review-sections">
-                            <section class="review-section" id="secTipo">
-                                <header>
-                                    <svg class="icon"><use href="#i-file"/></svg>
-                                    <h3>Tipo de solicitud</h3>
-                                </header>
-                                <div class="review-value" id="rvTipo"></div>
-                            </section>
-                            <section class="review-section" id="secSolicitante">
-                                <header>
+                    <div class="form-block">
+                        <div class="block-head">
+                            <span class="section-num">02</span>
+                            <div>
+                                <h2 class="block-title">
                                     <svg class="icon"><use href="#i-user"/></svg>
-                                    <h3>Solicitante</h3>
-                                </header>
-                                <div class="review-grid-small">
-                                    <div class="review-item">
-                                        <span>Nombre</span>
-                                        <strong id="rvSolicitante"></strong>
-                                    </div>
-                                    <div class="review-item">
-                                        <span>Área</span>
-                                        <strong id="rvArea"></strong>
+                                    Solicitante
+                                </h2>
+                                <p class="block-sub">El área se asigna automáticamente según tu perfil.</p>
+                            </div>
+                        </div>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="nombreSolicitante">
+                                    <svg class="icon"><use href="#i-user"/></svg>
+                                    Nombre completo
+                                </label>
+                                <input id="nombreSolicitante" type="text" th:field="*{nombreSolicitante}"
+                                       placeholder="Nombre completo" maxlength="120" required>
+                            </div>
+                            <div class="field">
+                                <label>
+                                    <svg class="icon"><use href="#i-building"/></svg>
+                                    Área solicitante
+                                </label>
+                                <div class="readonly-chip">
+                                    <svg class="icon icon-xs"><use href="#i-lock"/></svg>
+                                    <span id="areaActualTexto" th:text="${areaActual}"></span>
+                                </div>
+                                <input type="hidden" th:field="*{areaSolicitante}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-block">
+                        <div class="block-head">
+                            <span class="section-num">03</span>
+                            <div>
+                                <h2 class="block-title">
+                                    <svg class="icon"><use href="#i-file-text"/></svg>
+                                    Detalle
+                                </h2>
+                                <p class="block-sub">Cuéntanos exactamente qué información o acceso necesitas.</p>
+                            </div>
+                        </div>
+
+                        <div id="seccionInformacion">
+                            <div class="field full">
+                                <label for="tipoInformacion">
+                                    <svg class="icon"><use href="#i-search"/></svg>
+                                    ¿Qué documento o información necesitas?
+                                </label>
+                                <select id="tipoInformacion" th:field="*{tipoInformacion}" required>
+                                    <option th:if="${!sinDocumentos}" value="">Selecciona una opción</option>
+                                    <option th:each="doc : ${documentosDisponibles}" th:value="${doc.nombre}"
+                                            th:text="${doc.categoria != null ? doc.nombre + ' · ' + doc.categoria : doc.nombre}"></option>
+                                    <option value="OTRO">Otro (especificar)</option>
+                                </select>
+                                <p class="form-hint" th:if="${sinDocumentos}">
+                                    <span th:if="${hayDocumentosPublicados}">Ya tienes todos los documentos publicados. Si necesitas otro, elige «Otro» y descríbelo.</span>
+                                    <span th:unless="${hayDocumentosPublicados}">Gerencia aún no ha publicado documentos. Selecciona "Otro" y descríbelo.</span>
+                                </p>
+                                <p class="form-hint" th:unless="${sinDocumentos}">
+                                    Solo se muestran los documentos que aún no has recibido.
+                                </p>
+                            </div>
+                            <div class="field full" id="campoDetalleInfo">
+                                <label for="recursoModulo">
+                                    <svg class="icon"><use href="#i-edit-3"/></svg>
+                                    Detalle adicional <span class="optional">Opcional</span>
+                                </label>
+                                <input id="recursoModulo" type="text" th:field="*{recursoModulo}"
+                                       placeholder="Ej: ventas de septiembre" maxlength="120">
+                                <p class="form-hint" id="hintDetalle">Agrega una referencia si lo necesitas.</p>
+                            </div>
+                        </div>
+
+                        <div id="seccionAcceso" hidden>
+                            <div class="field full">
+                                <label>
+                                    <svg class="icon"><use href="#i-key"/></svg>
+                                    Módulos y nivel de acceso
+                                </label>
+                                <div class="modulos-grid" th:unless="${sinModulos}">
+                                    <div class="modulo-chip modulo-chip--select" th:each="entry : ${modulos}">
+                                        <label>
+                                            <input type="checkbox" th:field="*{modulosAcceso}" th:value="${entry.key}">
+                                            <span th:text="${entry.value}"></span>
+                                        </label>
+                                        <select th:name="'nivelesModulo[' + ${entry.key} + ']'"
+                                                th:aria-label="'Nivel de acceso para ' + ${entry.value}">
+                                            <option value="LECTURA">Lectura</option>
+                                            <option value="EDICION">Edición</option>
+                                        </select>
                                     </div>
                                 </div>
-                            </section>
-                            <section class="review-section" id="secDetalle">
-                                <header>
-                                    <svg class="icon"><use href="#i-file-text"/></svg>
-                                    <h3>Información solicitada</h3>
-                                </header>
-                                <div class="review-value" id="rvInfo"></div>
-                            </section>
-                            <section class="review-section" id="secModulos" hidden>
-                                <header>
-                                    <svg class="icon"><use href="#i-layer"/></svg>
-                                    <h3>Módulos y accesos</h3>
-                                </header>
-                                <div class="review-chips" id="rvModulos"></div>
-                            </section>
-                            <section class="review-section" id="secVigencia" hidden>
-                                <header>
-                                    <svg class="icon"><use href="#i-calendar"/></svg>
-                                    <h3>Vigencia</h3>
-                                </header>
-                                <div class="review-value" id="rvVigencia"></div>
-                            </section>
-                            <section class="review-section" id="secAdjunto">
-                                <header>
-                                    <svg class="icon"><use href="#i-paperclip"/></svg>
-                                    <h3>Adjunto</h3>
-                                </header>
-                                <div class="review-value" id="rvAdjunto"></div>
-                            </section>
-                            <section class="review-section" id="secMotivo">
-                                <header>
-                                    <svg class="icon"><use href="#i-message-square"/></svg>
-                                    <h3>Motivo</h3>
-                                </header>
-                                <div class="review-value" id="rvMotivo"></div>
-                            </section>
+                                <p class="empty-mini" th:if="${sinModulos}">
+                                    <svg class="icon"><use href="#i-check-circle"/></svg>
+                                    <span><strong>Ya tienes acceso a todos los módulos.</strong>
+                                        Tu rol tiene permisos vigentes en todo el catálogo, no hay módulos nuevos por solicitar.</span>
+                                </p>
+                                <p class="form-hint" th:unless="${sinModulos}">Solo se muestran los módulos a los que aún no tienes acceso.</p>
+                                <p class="form-hint" id="contadorModulos" th:unless="${sinModulos}">0 módulos seleccionados</p>
+                            </div>
+
+                            <div class="switch-card">
+                                <label class="form-check">
+                                    <input type="checkbox" id="permanente" th:field="*{permanente}">
+                                    <span>
+                                        <strong>Acceso permanente</strong>
+                                        <small>Sin fecha de fin. Se mantiene hasta que se revoque.</small>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="grid" id="camposFechas" style="margin-top:.9rem;">
+                                <div class="field">
+                                    <label for="fechaInicioAcceso">
+                                        <svg class="icon"><use href="#i-calendar"/></svg>
+                                        Fecha de inicio
+                                    </label>
+                                    <input id="fechaInicioAcceso" type="date" th:field="*{fechaInicioAcceso}">
+                                </div>
+                                <div class="field">
+                                    <label for="fechaFinAcceso">
+                                        <svg class="icon"><use href="#i-calendar-check"/></svg>
+                                        Fecha de fin <span class="optional">Opcional</span>
+                                    </label>
+                                    <input id="fechaFinAcceso" type="date" th:field="*{fechaFinAcceso}">
+                                </div>
+                            </div>
+                            <p class="form-hint">Si no indicas fecha de fin, el acceso dura 30 días.</p>
+                        </div>
+
+                        <div class="field full" style="margin-top:1rem;">
+                            <label for="motivo">
+                                <svg class="icon"><use href="#i-message-square"/></svg>
+                                Motivo
+                            </label>
+                            <textarea id="motivo" th:field="*{motivo}"
+                                      placeholder="Explica brevemente para qué necesitas esto" required></textarea>
                         </div>
                     </div>
-                    <div class="modal-foot">
-                        <button type="button" class="btn btn-ghost" id="btnVolver">
+
+                    <div class="form-block">
+                        <div class="block-head">
+                            <span class="section-num">04</span>
+                            <div>
+                                <h2 class="block-title">
+                                    <svg class="icon"><use href="#i-paperclip"/></svg>
+                                    Adjunto <span class="optional">Opcional</span>
+                                </h2>
+                                <p class="block-sub">Puedes adjuntar un archivo de respaldo para tu solicitud.</p>
+                            </div>
+                        </div>
+                        <div class="file-row">
+                            <input id="archivo" type="file" name="archivo"
+                                   accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                            <span class="file-chip" id="archivoPreview" hidden>
+                                <svg class="icon icon-xs"><use href="#i-file"/></svg>
+                                <span id="archivoNombre"></span>
+                                <button type="button" id="btnQuitarArchivo" title="Quitar archivo">&times;</button>
+                            </span>
+                        </div>
+                        <p class="form-hint">PDF, Word, Excel, texto o imágenes. Máximo 10 MB.</p>
+                    </div>
+
+                    <div class="form-alert" id="formError" role="alert" aria-live="assertive" hidden>
+                        <svg class="icon"><use href="#i-alert"/></svg>
+                        <span id="formErrorTexto"></span>
+                    </div>
+
+                    <div class="actions actions--simple">
+                        <a th:href="@{/solicitudes}" class="btn btn-secondary">
                             <svg class="icon"><use href="#i-arrow-left"/></svg>
-                            Volver
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-secondary" formaction="/solicitudes/borrador" formnovalidate>
+                            <svg class="icon"><use href="#i-save"/></svg>
+                            Guardar borrador
                         </button>
-                        <button type="submit" class="btn btn-primary" id="btnEnviarFinal">
-                            <svg class="icon"><use href="#i-send"/></svg>
-                            Enviar solicitud
+                        <button type="button" class="btn btn-primary" id="btnRevisar">
+                            <svg class="icon"><use href="#i-check-circle"/></svg>
+                            Revisar solicitud
                         </button>
                     </div>
+
+                    <div class="modal-overlay" id="modalRevision" aria-hidden="true" hidden>
+                        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+                            <div class="modal-head">
+                                <div class="modal-brand">
+                                    <svg class="icon icon-brand"><use href="#i-grid"/></svg>
+                                    <span>Nuevo Horizonte</span>
+                                </div>
+                                <div>
+                                    <span class="eyebrow">Revisión de solicitud</span>
+                                    <h2 id="modalTitulo">Confirma los datos antes de enviar</h2>
+                                </div>
+                                <button type="button" class="modal-close" id="btnCerrarModal" aria-label="Cerrar">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="review-sections">
+                                    <section class="review-section" id="secTipo">
+                                        <header>
+                                            <svg class="icon"><use href="#i-grid"/></svg>
+                                            <h3>Tipo de solicitud</h3>
+                                        </header>
+                                        <div class="review-value" id="rvTipo"></div>
+                                    </section>
+                                    <section class="review-section" id="secSolicitante">
+                                        <header>
+                                            <svg class="icon"><use href="#i-user"/></svg>
+                                            <h3>Solicitante</h3>
+                                        </header>
+                                        <div class="review-grid-small">
+                                            <div class="review-item">
+                                                <span>Nombre</span>
+                                                <strong id="rvSolicitante"></strong>
+                                            </div>
+                                            <div class="review-item">
+                                                <span>Área</span>
+                                                <strong id="rvArea"></strong>
+                                            </div>
+                                        </div>
+                                    </section>
+                                    <section class="review-section" id="secDetalle">
+                                        <header>
+                                            <svg class="icon"><use href="#i-file-text"/></svg>
+                                            <h3>Información solicitada</h3>
+                                        </header>
+                                        <div class="review-value" id="rvInfo"></div>
+                                    </section>
+                                    <section class="review-section" id="secModulos" hidden>
+                                        <header>
+                                            <svg class="icon"><use href="#i-layer"/></svg>
+                                            <h3>Módulos y accesos</h3>
+                                        </header>
+                                        <div class="review-chips" id="rvModulos"></div>
+                                    </section>
+                                    <section class="review-section" id="secVigencia" hidden>
+                                        <header>
+                                            <svg class="icon"><use href="#i-calendar"/></svg>
+                                            <h3>Vigencia</h3>
+                                        </header>
+                                        <div class="review-value" id="rvVigencia"></div>
+                                    </section>
+                                    <section class="review-section" id="secAdjunto">
+                                        <header>
+                                            <svg class="icon"><use href="#i-paperclip"/></svg>
+                                            <h3>Adjunto</h3>
+                                        </header>
+                                        <div class="review-value" id="rvAdjunto"></div>
+                                    </section>
+                                    <section class="review-section" id="secMotivo">
+                                        <header>
+                                            <svg class="icon"><use href="#i-message-square"/></svg>
+                                            <h3>Motivo</h3>
+                                        </header>
+                                        <div class="review-value" id="rvMotivo"></div>
+                                    </section>
+                                </div>
+                            </div>
+                            <div class="modal-foot">
+                                <button type="button" class="btn btn-ghost" id="btnVolver">
+                                    <svg class="icon"><use href="#i-arrow-left"/></svg>
+                                    Volver
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="btnEnviarFinal">
+                                    <svg class="icon"><use href="#i-send"/></svg>
+                                    Enviar solicitud
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <aside class="form-aside">
+            <div class="summary-card">
+                <div class="summary-head">
+                    <svg class="icon"><use href="#i-sparkles"/></svg>
+                    <h3>Resumen en vivo</h3>
+                </div>
+
+                <div class="summary-block summary-block--inline">
+                    <span class="summary-label">Tipo</span>
+                    <strong id="resumenTipo">Información</strong>
+                </div>
+                <div class="summary-block summary-block--inline">
+                    <span class="summary-label">Solicitante</span>
+                    <strong id="resumenSolicitante">—</strong>
+                </div>
+                <div class="summary-block summary-block--inline">
+                    <span class="summary-label">Área</span>
+                    <strong id="resumenArea" th:text="${areaActual}">—</strong>
+                </div>
+                <div class="summary-block summary-block--inline">
+                    <span class="summary-label">Módulos</span>
+                    <strong id="resumenModulos">No aplica</strong>
+                </div>
+                <div class="summary-block summary-block--inline">
+                    <span class="summary-label">Vigencia</span>
+                    <strong id="resumenVigencia">No aplica</strong>
+                </div>
+                <div class="summary-block summary-block--inline">
+                    <span class="summary-label">Adjunto</span>
+                    <strong id="resumenAdjunto">Sin adjunto</strong>
+                </div>
+
+                <div class="summary-total">
+                    <span>Estado</span>
+                    <strong id="resumenEstado">Listo para revisar</strong>
+                </div>
+
+                <ul class="summary-steps">
+                    <li>
+                        <svg class="icon"><use href="#i-check-circle"/></svg>
+                        <span>Revisa los datos antes de enviar la solicitud.</span>
+                    </li>
+                    <li>
+                        <svg class="icon"><use href="#i-save"/></svg>
+                        <span>Puedes guardar un borrador y continuar después.</span>
+                    </li>
+                    <li>
+                        <svg class="icon"><use href="#i-shield-check"/></svg>
+                        <span>La solicitud pasará al flujo de aprobación.</span>
+                    </li>
+                </ul>
+
+                <div class="summary-hint">
+                    <svg class="icon"><use href="#i-lock"/></svg>
+                    <span>Tus datos se usan solo para gestionar esta solicitud.</span>
                 </div>
             </div>
-        </form>
-    </section>
+        </aside>
+    </div>
 </main>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('solicitudForm');
+    const sinModulos = form.dataset.sinModulos === 'true';
     const seccionInformacion = document.getElementById('seccionInformacion');
     const seccionAcceso = document.getElementById('seccionAcceso');
     const tipoInformacion = document.getElementById('tipoInformacion');
@@ -325,8 +523,38 @@ document.addEventListener('DOMContentLoaded', function () {
     const archivoPreview = document.getElementById('archivoPreview');
     const archivoNombre = document.getElementById('archivoNombre');
     const btnQuitarArchivo = document.getElementById('btnQuitarArchivo');
+    const pasos = document.querySelectorAll('#formSteps .step');
+    const bloques = document.querySelectorAll('.form-block');
 
     let envioConfirmado = false;
+    let ultimoFoco = null;
+
+    function elementosEnfocables() {
+        return Array.prototype.slice.call(
+            modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')
+        ).filter(function (elemento) {
+            return elemento.offsetWidth > 0 || elemento.offsetHeight > 0;
+        });
+    }
+
+    function atraparFoco(event) {
+        if (event.key !== 'Tab') {
+            return;
+        }
+        const enfocables = elementosEnfocables();
+        if (!enfocables.length) {
+            return;
+        }
+        const primero = enfocables[0];
+        const ultimo = enfocables[enfocables.length - 1];
+        if (event.shiftKey && document.activeElement === primero) {
+            event.preventDefault();
+            ultimo.focus();
+        } else if (!event.shiftKey && document.activeElement === ultimo) {
+            event.preventDefault();
+            primero.focus();
+        }
+    }
 
     function esAcceso() {
         const seleccionado = document.querySelector('input[name="tipoSolicitud"]:checked');
@@ -342,6 +570,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function limpiarError() {
         formError.hidden = true;
         formErrorTexto.textContent = '';
+    }
+
+    function setTexto(id, valor) {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.textContent = valor;
+        }
+    }
+
+    function activarPaso(indice) {
+        pasos.forEach(function (paso, i) {
+            paso.classList.toggle('active', i === indice);
+            paso.classList.toggle('done', i < indice);
+        });
     }
 
     function actualizarTipo() {
@@ -426,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const acceso = esAcceso();
         const nombre = document.getElementById('nombreSolicitante').value.trim();
         const area = document.getElementById('areaActualTexto').textContent.trim();
+        const modulosSeleccionados = document.querySelectorAll('input[name="modulosAcceso"]:checked').length;
 
         document.getElementById('rvTipo').textContent = acceso ? 'Acceso a módulos' : 'Información';
         document.getElementById('rvSolicitante').textContent = nombre || 'Sin nombre';
@@ -467,6 +710,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             document.getElementById('rvVigencia').textContent = vigenciaTexto();
         }
+
+        setTexto('resumenTipo', acceso ? 'Acceso a módulos' : 'Información');
+        setTexto('resumenSolicitante', nombre || 'Sin nombre');
+        setTexto('resumenArea', area || 'Sin área');
+        setTexto('resumenModulos', acceso
+            ? (modulosSeleccionados + (modulosSeleccionados === 1 ? ' seleccionado' : ' seleccionados'))
+            : 'No aplica');
+        setTexto('resumenVigencia', acceso ? vigenciaTexto() : 'No aplica');
+        setTexto('resumenAdjunto', archivoInput.files.length > 0
+            ? archivoInput.files[0].name
+            : 'Sin adjunto');
+        setTexto('resumenEstado', acceso && !moduloSeleccionado()
+            ? (sinModulos ? 'Sin módulos pendientes' : 'Falta elegir módulos')
+            : 'Listo para revisar');
     }
 
     function abrirRevision() {
@@ -475,7 +732,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         if (esAcceso() && !moduloSeleccionado()) {
-            mostrarError('Selecciona al menos un módulo al que necesitas acceso.');
+            mostrarError(sinModulos
+                ? 'Ya tienes acceso a todos los módulos disponibles; no hay módulos nuevos por solicitar.'
+                : 'Selecciona al menos un módulo al que necesitas acceso.');
             return;
         }
         if (!esAcceso() && !tipoInformacion.value) {
@@ -483,16 +742,35 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         actualizarResumen();
+        ultimoFoco = document.activeElement;
         modal.hidden = false;
+        modal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
+        document.addEventListener('keydown', atraparFoco);
         btnEnviarFinal.focus();
     }
 
     function cerrarRevision() {
         modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
-        btnRevisar.focus();
+        document.removeEventListener('keydown', atraparFoco);
+        if (ultimoFoco && typeof ultimoFoco.focus === 'function') {
+            ultimoFoco.focus();
+        } else {
+            btnRevisar.focus();
+        }
     }
+
+    bloques.forEach(function (bloque, indice) {
+        bloque.addEventListener('focusin', function () {
+            activarPaso(indice);
+        });
+        bloque.addEventListener('click', function () {
+            activarPaso(indice);
+        });
+    });
+    activarPaso(0);
 
     if (permanente) {
         permanente.addEventListener('change', actualizarVigencia);

@@ -1,145 +1,318 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+        <meta charset="UTF-8">
+<script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reportes - Nuevo Horizonte</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container">
-    <div class="page-head">
+<main id="contenido" tabindex="-1" class="container">
+    <div class="page-head report-head">
         <div>
             <span class="eyebrow">
                 <svg class="icon"><use href="#i-chart"/></svg>
-                Indicadores
+                Analítica
             </span>
             <h1>Reportes de atención</h1>
-            <p class="subtitle">Indicadores de desempeño de las solicitudes.</p>
+            <p class="subtitle">Indicadores de desempeño, demanda y tiempos de respuesta del flujo de solicitudes.</p>
+        </div>
+        <div class="report-stamp">
+            <svg class="icon"><use href="#i-calendar-check"/></svg>
+            <span>Actualizado el <strong th:text="${fechaReporte}">hoy</strong></span>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon"><svg class="icon"><use href="#i-file"/></svg></div>
-            <div>
-                <div class="stat-value" th:text="${totalSolicitudes}">0</div>
-                <div class="stat-label">Total</div>
+    <!-- ===================== KPI principales ===================== -->
+    <div class="kpi-grid">
+        <article class="kpi-card kpi-card--blue">
+            <div class="kpi-top">
+                <span class="kpi-label">Solicitudes totales</span>
+                <span class="kpi-icon">
+                    <svg class="icon"><use href="#i-inbox"/></svg>
+                </span>
             </div>
-        </div>
-        <div class="stat-card stat-card--warn">
-            <div class="stat-icon"><svg class="icon"><use href="#i-clock"/></svg></div>
-            <div>
-                <div class="stat-value" th:text="${pendientes}">0</div>
-                <div class="stat-label">Pendientes</div>
+            <div class="kpi-value" th:text="${totalSolicitudes}">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-trend"
+                      th:classappend="${variacionSemana >= 0} ? 'kpi-trend--up' : 'kpi-trend--down'">
+                    <svg class="icon icon-xs" th:if="${variacionSemana >= 0}"><use href="#i-trending-up"/></svg>
+                    <svg class="icon icon-xs" th:if="${variacionSemana < 0}"><use href="#i-trending-down"/></svg>
+                    <span th:text="${variacionSemana >= 0 ? '+' + variacionSemana + '%' : variacionSemana + '%'}">0%</span>
+                </span>
+                <span>vs. semana anterior</span>
             </div>
-        </div>
-        <div class="stat-card stat-card--success">
-            <div class="stat-icon"><svg class="icon"><use href="#i-check-circle"/></svg></div>
-            <div>
-                <div class="stat-value" th:text="${aprobadas}">0</div>
-                <div class="stat-label">Aprobadas</div>
+        </article>
+
+        <article class="kpi-card kpi-card--amber">
+            <div class="kpi-top">
+                <span class="kpi-label">Pendientes</span>
+                <span class="kpi-icon">
+                    <svg class="icon"><use href="#i-clock"/></svg>
+                </span>
             </div>
-        </div>
-        <div class="stat-card stat-card--danger">
-            <div class="stat-icon"><svg class="icon"><use href="#i-x"/></svg></div>
-            <div>
-                <div class="stat-value" th:text="${rechazadas}">0</div>
-                <div class="stat-label">Rechazadas</div>
+            <div class="kpi-value" th:text="${pendientes}">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-trend kpi-trend--neutral">
+                    <svg class="icon icon-xs"><use href="#i-edit-3"/></svg>
+                    <span th:text="${enRevision}">0</span> en revisión
+                </span>
             </div>
-        </div>
+        </article>
+
+        <article class="kpi-card kpi-card--green">
+            <div class="kpi-top">
+                <span class="kpi-label">Aprobadas</span>
+                <span class="kpi-icon">
+                    <svg class="icon"><use href="#i-check-circle"/></svg>
+                </span>
+            </div>
+            <div class="kpi-value" th:text="${aprobadas}">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-trend kpi-trend--up">
+                    <svg class="icon icon-xs"><use href="#i-percent"/></svg>
+                    <span th:text="${tasaAprobacion}">0</span>% de aprobación
+                </span>
+            </div>
+        </article>
+
+        <article class="kpi-card kpi-card--red">
+            <div class="kpi-top">
+                <span class="kpi-label">Rechazadas</span>
+                <span class="kpi-icon">
+                    <svg class="icon"><use href="#i-x"/></svg>
+                </span>
+            </div>
+            <div class="kpi-value" th:text="${rechazadas}">0</div>
+            <div class="kpi-foot">
+                <span class="kpi-trend kpi-trend--neutral">
+                    <svg class="icon icon-xs"><use href="#i-check"/></svg>
+                    <span th:text="${decididas}">0</span> decididas
+                </span>
+            </div>
+        </article>
     </div>
 
-    <div class="report-grid" style="margin-top:22px;">
-        <section class="card">
-            <h2 class="card-title">
-                <svg class="icon"><use href="#i-chart"/></svg>
-                Distribución por estado
-            </h2>
-            <div class="bar-row" th:each="e : ${porEstado}">
-                <div class="bar-label">
-                    <span th:text="${e.key}"></span>
-                    <strong th:text="${e.value}"></strong>
+    <!-- ===================== Estado + actividad ===================== -->
+    <div class="report-grid-2">
+        <section class="report-panel">
+            <div class="panel-head">
+                <div>
+                    <h2 class="panel-title">
+                        <svg class="icon"><use href="#i-pie-chart"/></svg>
+                        Estado de las solicitudes
+                    </h2>
+                    <p class="panel-sub">Distribución actual del total registrado.</p>
                 </div>
-                <div class="bar">
-                    <div class="bar-fill"
-                         th:style="'width:' + ${totalSolicitudes > 0 ? (e.value * 100 / totalSolicitudes) : 0} + '%'"></div>
+                <span class="panel-badge" th:text="${tasaResolucion} + '% resueltas'">0% resueltas</span>
+            </div>
+
+            <div class="donut-wrap">
+                <div class="donut" th:style="'background:' + ${donutEstados}">
+                    <div class="donut-center">
+                        <strong th:text="${totalSolicitudes}">0</strong>
+                        <span>Total</span>
+                    </div>
                 </div>
+                <ul class="legend">
+                    <li class="legend-item" th:each="e : ${porEstado}">
+                        <span class="legend-dot" th:style="'background:' + ${e.color}"></span>
+                        <span class="legend-label" th:text="${e.etiqueta}">Estado</span>
+                        <span class="legend-value" th:text="${e.total}">0</span>
+                        <span class="legend-pct" th:text="${e.pct} + '%'">0%</span>
+                    </li>
+                </ul>
             </div>
         </section>
 
-        <section class="card">
-            <h2 class="card-title">
-                <svg class="icon"><use href="#i-building"/></svg>
-                Solicitudes por área
-            </h2>
-            <div class="table-wrap">
-                <table class="table--compact">
-                    <thead>
-                    <tr>
-                        <th>Área</th>
-                        <th>Total</th>
-                        <th>%</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="e : ${porArea}" th:if="${e.value > 0}">
-                        <td th:text="${e.key}"></td>
-                        <td th:text="${e.value}"></td>
-                        <td th:text="${totalSolicitudes > 0 ? (e.value * 100 / totalSolicitudes) : 0} + '%'"></td>
-                    </tr>
-                    <tr th:if="${#maps.isEmpty(porArea)}">
-                        <td colspan="3" style="text-align:center;color:#64748b;">Sin datos</td>
-                    </tr>
-                    </tbody>
-                </table>
+        <section class="report-panel">
+            <div class="panel-head">
+                <div>
+                    <h2 class="panel-title">
+                        <svg class="icon"><use href="#i-activity"/></svg>
+                        Actividad semanal
+                    </h2>
+                    <p class="panel-sub">Solicitudes creadas en las últimas 8 semanas.</p>
+                </div>
+                <span class="panel-badge panel-badge--soft">
+                    <svg class="icon icon-xs"><use href="#i-trending-up"/></svg>
+                    <span th:text="${ultimos7}">0</span> esta semana
+                </span>
+            </div>
+
+            <div class="trend-chart">
+                <div class="trend-col" th:each="p : ${serieSemanas}">
+                    <span class="trend-value" th:text="${p.total}">0</span>
+                    <div class="trend-track">
+                        <div class="trend-bar"
+                             th:style="'height:' + ${p.pct} + '%'"
+                             th:classappend="${maxSerie > 0 and p.total == maxSerie} ? 'is-peak' : ''"></div>
+                    </div>
+                    <span class="trend-label" th:text="${p.etiqueta}">00/00</span>
+                </div>
+            </div>
+
+            <div class="trend-foot">
+                <span>Pico semanal: <strong th:text="${maxSerie}">0</strong></span>
+                <span>Promedio: <strong th:text="${promedioDiario}">0</strong> por día</span>
             </div>
         </section>
     </div>
 
-    <section class="card card--table" th:if="${!#lists.isEmpty(solicitudes)}" style="margin-top:22px;">
-        <div class="card-head">
-            <h2 class="card-title" style="margin-bottom:0;">
-                <svg class="icon"><use href="#i-clock"/></svg>
-                Últimas solicitudes
-            </h2>
+    <!-- ===================== Áreas + eficiencia ===================== -->
+    <div class="report-grid-2">
+        <section class="report-panel">
+            <div class="panel-head">
+                <div>
+                    <h2 class="panel-title">
+                        <svg class="icon"><use href="#i-building"/></svg>
+                        Solicitudes por área
+                    </h2>
+                    <p class="panel-sub">Demanda acumulada de cada área solicitante.</p>
+                </div>
+                <span class="panel-badge panel-badge--soft">
+                    <svg class="icon icon-xs"><use href="#i-layer"/></svg>
+                    <span th:text="${#lists.size(porArea)}">0</span> áreas
+                </span>
+            </div>
+
+            <div class="area-list" th:if="${!#lists.isEmpty(porArea)}">
+                <div class="area-item" th:each="a, stat : ${porArea}">
+                    <div class="area-top">
+                        <span class="area-name">
+                            <span class="area-rank" th:text="${stat.count}">1</span>
+                            <span th:text="${a.area}">Área</span>
+                        </span>
+                        <span class="area-numbers">
+                            <strong th:text="${a.total}">0</strong>
+                            <small th:text="${a.pct} + '%'">0%</small>
+                        </span>
+                    </div>
+                    <div class="area-track">
+                        <div class="area-fill" th:style="'width:' + ${a.pct} + '%'"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-mini" th:if="${#lists.isEmpty(porArea)}">
+                <svg class="icon"><use href="#i-info"/></svg>
+                Aún no hay solicitudes registradas por área.
+            </div>
+
+            <div class="area-highlight" th:if="${areaTopTotal > 0}">
+                <span class="area-highlight__icon">
+                    <svg class="icon"><use href="#i-target"/></svg>
+                </span>
+                <span>Área líder: <strong th:text="${areaTop}">—</strong>
+                    con <strong th:text="${areaTopTotal}">0</strong> solicitudes</span>
+            </div>
+        </section>
+
+        <section class="report-panel">
+            <div class="panel-head">
+                <div>
+                    <h2 class="panel-title">
+                        <svg class="icon"><use href="#i-target"/></svg>
+                        Tipos y eficiencia
+                    </h2>
+                    <p class="panel-sub">Composición de la demanda y desempeño de la atención.</p>
+                </div>
+            </div>
+
+            <div class="type-grid">
+                <div class="type-card" th:each="t : ${porTipo}"
+                     th:classappend="${t.clave == 'info'} ? 'type-card--info' : 'type-card--access'">
+                    <span class="type-icon">
+                        <svg class="icon" th:if="${t.clave == 'info'}"><use href="#i-file-text"/></svg>
+                        <svg class="icon" th:if="${t.clave == 'acceso'}"><use href="#i-key"/></svg>
+                    </span>
+                    <div class="type-body">
+                        <span th:text="${t.etiqueta}">Tipo</span>
+                        <strong th:text="${t.pct} + '%'">0%</strong>
+                        <small th:text="${t.total} + ' solicitudes'">0 solicitudes</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-list">
+                <div class="metric-row">
+                    <span class="metric-label">
+                        <svg class="icon"><use href="#i-check-circle"/></svg>
+                        Tasa de aprobación
+                    </span>
+                    <span class="metric-value" th:text="${tasaAprobacion} + '%'">0%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">
+                        <svg class="icon"><use href="#i-timer"/></svg>
+                        Tiempo medio de atención
+                    </span>
+                    <span class="metric-value">
+                        <span th:text="${tiempoPromedioValor}">—</span>
+                        <small th:text="${tiempoPromedioUnidad}">sin datos</small>
+                    </span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">
+                        <svg class="icon"><use href="#i-zap"/></svg>
+                        Atendidas en 48 h o menos
+                    </span>
+                    <span class="metric-value" th:text="${slaCumplido} + '%'">0%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">
+                        <svg class="icon"><use href="#i-percent"/></svg>
+                        Tasa de resolución
+                    </span>
+                    <span class="metric-value" th:text="${tasaResolucion} + '%'">0%</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===================== Insights ===================== -->
+    <div class="insight-strip">
+        <div class="insight-card">
+            <span class="insight-icon insight-icon--blue">
+                <svg class="icon" th:if="${variacionSemana >= 0}"><use href="#i-trending-up"/></svg>
+                <svg class="icon" th:if="${variacionSemana < 0}"><use href="#i-trending-down"/></svg>
+            </span>
+            <div>
+                <strong th:text="${variacionSemana >= 0 ? '+' + variacionSemana + '%' : variacionSemana + '%'}">0%</strong>
+                <span>variación frente a la semana anterior · <span th:text="${ultimos7}">0</span> nuevas</span>
+            </div>
         </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>N°</th>
-                    <th>Solicitante</th>
-                    <th>Área</th>
-                    <th>Recurso</th>
-                    <th>Estado</th>
-                    <th>Fecha decisión</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="s : ${solicitudes}">
-                    <td th:text="${s.numeroSolicitud}"></td>
-                    <td th:text="${s.nombreSolicitante}"></td>
-                    <td th:text="${s.areaSolicitante}"></td>
-                    <td th:text="${s.recursoModulo}"></td>
-                    <td>
-                        <span class="badge"
-                              th:classappend="${#strings.toLowerCase(s.estado.toString())}"
-                              th:text="${s.estado}"></span>
-                    </td>
-                    <td th:text="${s.fechaAprobacionRechazo != null ? s.fechaAprobacionRechazo : '—'}"></td>
-                    <td>
-                        <a th:href="@{'/solicitudes/' + ${s.idSolicitud}}" class="btn btn-ghost">Ver</a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+        <div class="insight-card">
+            <span class="insight-icon insight-icon--amber">
+                <svg class="icon"><use href="#i-inbox"/></svg>
+            </span>
+            <div>
+                <strong th:text="${pendientes + enRevision}">0</strong>
+                <span>solicitudes por atender entre pendientes y en revisión</span>
+            </div>
         </div>
-    </section>
+        <div class="insight-card">
+            <span class="insight-icon insight-icon--green">
+                <svg class="icon"><use href="#i-shield-check"/></svg>
+            </span>
+            <div>
+                <strong th:text="${slaCumplido} + '%'">0%</strong>
+                <span>cumplimiento del objetivo de atención en 48 horas</span>
+            </div>
+        </div>
+    </div>
 </main>
 </body>
 </html>

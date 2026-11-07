@@ -10,5 +10,7 @@ public interface UsuarioRolRepository extends JpaRepository<UsuarioRol, Long> {
 
     List<UsuarioRol> findByUsuarioId(Long idUsuario);
 
-    List<UsuarioRol> findByActivoTrueAndFechaFinIsNotNullAndFechaFinBefore(LocalDate fecha);
+    List<UsuarioRol> findByActivoTrueAndFechaFinIsNotNullAndFechaFinLessThanEqual(LocalDate fecha);
+
+    List<UsuarioRol> findByRolIdAndActivoTrue(Long idRol);
 }

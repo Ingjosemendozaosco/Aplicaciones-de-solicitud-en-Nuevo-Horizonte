@@ -1,6 +1,5 @@
 package com.example.demo.modulos.solicitudes.controller;
 
-import com.example.demo.modulos.ModuloCatalogo;
 import com.example.demo.modulos.documentos.entity.Documento;
 import com.example.demo.modulos.documentos.service.DocumentoService;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.service.CargoFormal;
@@ -12,6 +11,7 @@ import com.example.demo.modulos.solicitudes.entity.EstadoSolicitud;
 import com.example.demo.modulos.solicitudes.entity.Solicitud;
 import com.example.demo.modulos.solicitudes.entity.TipoSolicitud;
 import com.example.demo.modulos.solicitudes.service.SolicitudService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +28,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,19 +56,53 @@ public class SolicitudController {
         SolicitudRequestDTO solicitud = new SolicitudRequestDTO();
         solicitud.setTipoSolicitud(TipoSolicitud.INFORMACION);
         solicitud.setNombreSolicitante(authentication.getName());
-        solicitud.setFechaInicioAcceso(java.time.LocalDate.now());
-        solicitud.setFechaFinAcceso(java.time.LocalDate.now().plusDays(30));
+        solicitud.setFechaInicioAcceso(LocalDate.now());
+        solicitud.setFechaFinAcceso(LocalDate.now().plusDays(30));
         String areaDefault = obtenerAreaPorUsuario(authentication);
         solicitud.setAreaSolicitante(areaDefault);
+        return prepararFormulario(model, authentication, solicitud);
+    }
+
+    @GetMapping("/{id}/duplicar")
+    public String duplicar(@PathVariable Long id, Authentication authentication, Model model,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            SolicitudRequestDTO solicitud = solicitudService.paraDuplicar(
+                    id, authentication.getName(), esAdministracion(authentication));
+            model.addAttribute("solicitudOrigen", solicitudService.buscarPorId(id).getNumeroSolicitud());
+            return prepararFormulario(model, authentication, solicitud);
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/solicitudes/" + id;
+        }
+    }
+
+    private String prepararFormulario(Model model, Authentication authentication,
+                                      SolicitudRequestDTO solicitud) {
+        String areaDefault = solicitud.getAreaSolicitante() != null
+                && !solicitud.getAreaSolicitante().isBlank()
+                ? solicitud.getAreaSolicitante() : obtenerAreaPorUsuario(authentication);
         List<String> rolesActuales = rolesDe(authentication);
+        Map<String, String> modulosPendientes = solicitudService.modulosSinAcceso(authentication.getName());
+        List<Documento> documentosPendientes = solicitudService.documentosSinRecibir(authentication.getName());
+        boolean hayDocumentosPublicados = !documentoService.listar().isEmpty();
+        boolean sinModulos = modulosPendientes.isEmpty();
+        boolean sinDocumentos = documentosPendientes.isEmpty();
+        if (sinDocumentos && !"OTRO".equalsIgnoreCase(solicitud.getTipoInformacion())) {
+            solicitud.setTipoInformacion("OTRO");
+        }
         model.addAttribute("solicitud", solicitud);
         model.addAttribute("areaActual", areaDefault);
         model.addAttribute("jerarquia", JERARQUIA);
         model.addAttribute("rolesActuales", rolesActuales);
         model.addAttribute("cargoActual", CargoFormal.deNombres(rolesActuales));
-        model.addAttribute("documentosDisponibles", documentoService.listar());
-        model.addAttribute("modulos", ModuloCatalogo.etiquetas());
+        model.addAttribute("documentosDisponibles", documentosPendientes);
+        model.addAttribute("modulos", modulosPendientes);
         model.addAttribute("niveles", NIVELES_ACCESO);
+        model.addAttribute("sinModulos", sinModulos);
+        model.addAttribute("sinDocumentos", sinDocumentos);
+        model.addAttribute("hayDocumentosPublicados", hayDocumentosPublicados);
+        model.addAttribute("tieneTodo", sinModulos && sinDocumentos);
         return "solicitudes/formulario";
     }
 
@@ -109,8 +144,7 @@ public class SolicitudController {
 
     @GetMapping("/lista-aprobados")
     public String listarAprobados(Authentication authentication, Model model) {
-        List<String> roles = rolesDe(authentication);
-        boolean puedeVer = roles.contains("Area de Producto") || roles.contains("Area de Ventas");
+        boolean puedeVer = puedeConsultarAprobadas(authentication);
         List<SolicitudResponseDTO> solicitudes = puedeVer
                 ? solicitudService.listarPorEstado(com.example.demo.modulos.solicitudes.entity.EstadoSolicitud.APROBADA)
                 : List.of();
@@ -121,26 +155,40 @@ public class SolicitudController {
     }
 
     @GetMapping
-    public String listar(Authentication authentication, Model model) {
+    public String listar(Authentication authentication, Model model,
+                         @RequestParam(required = false) EstadoSolicitud estado,
+                         @RequestParam(required = false) String area,
+                         @RequestParam(required = false)
+                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                         @RequestParam(required = false)
+                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+                         @RequestParam(required = false, name = "q") String q) {
         boolean visionGlobal = esAdministracion(authentication) || esGerencia(authentication);
-        var solicitudes = visionGlobal
-                ? solicitudService.listarTodas()
-                : solicitudService.listarPorUsuario(authentication.getName());
+        String username = visionGlobal ? null : authentication.getName();
+        var solicitudes = solicitudService.listarFiltrado(estado, area, desde, hasta, username, q);
         model.addAttribute("solicitudes", solicitudes);
         model.addAttribute("puedeCrear", puedeCrear(authentication));
         model.addAttribute("total", solicitudes.size());
         model.addAttribute("totalPendientes", solicitudes.stream()
-                .filter(s -> s.getEstado() == com.example.demo.modulos.solicitudes.entity.EstadoSolicitud.PENDIENTE)
+                .filter(s -> s.getEstado() == EstadoSolicitud.PENDIENTE)
                 .count());
         model.addAttribute("totalRevision", solicitudes.stream()
-                .filter(s -> s.getEstado() == com.example.demo.modulos.solicitudes.entity.EstadoSolicitud.EN_REVISION)
+                .filter(s -> s.getEstado() == EstadoSolicitud.EN_REVISION)
                 .count());
         model.addAttribute("totalAprobadas", solicitudes.stream()
-                .filter(s -> s.getEstado() == com.example.demo.modulos.solicitudes.entity.EstadoSolicitud.APROBADA)
+                .filter(s -> s.getEstado() == EstadoSolicitud.APROBADA)
                 .count());
         model.addAttribute("totalRechazadas", solicitudes.stream()
-                .filter(s -> s.getEstado() == com.example.demo.modulos.solicitudes.entity.EstadoSolicitud.RECHAZADA)
+                .filter(s -> s.getEstado() == EstadoSolicitud.RECHAZADA)
                 .count());
+        model.addAttribute("areas", solicitudService.listarAreas());
+        model.addAttribute("filtroEstado", estado);
+        model.addAttribute("filtroArea", area);
+        model.addAttribute("filtroDesde", desde);
+        model.addAttribute("filtroHasta", hasta);
+        model.addAttribute("filtroQ", q);
+        model.addAttribute("hayFiltros", estado != null || (area != null && !area.isBlank())
+                || desde != null || hasta != null || (q != null && !q.isBlank()));
         return "solicitudes/lista";
     }
 
@@ -149,7 +197,9 @@ public class SolicitudController {
         var solicitud = solicitudService.buscarPorId(id);
         boolean administracion = esAdministracion(authentication);
         boolean esSolicitante = authentication.getName().equals(solicitud.getUsernameSolicitante());
-        if (!administracion && !esGerencia(authentication) && !esSolicitante) {
+        boolean aprobadaConsultable = solicitud.getEstado() == EstadoSolicitud.APROBADA
+                && puedeConsultarAprobadas(authentication);
+        if (!administracion && !esGerencia(authentication) && !esSolicitante && !aprobadaConsultable) {
             return "redirect:/solicitudes";
         }
         if (administracion && solicitud.getEstado() == EstadoSolicitud.PENDIENTE
@@ -176,6 +226,7 @@ public class SolicitudController {
         model.addAttribute("propuesta", propuesta);
         model.addAttribute("puedeDecidir", administracion);
         model.addAttribute("esSolicitante", esSolicitante);
+        model.addAttribute("puedeDuplicar", administracion || esSolicitante);
         if (administracion && solicitud.getTipoSolicitud() == TipoSolicitud.ACCESO) {
             model.addAttribute("modulosActuales", solicitudService.modulosActuales(id));
             model.addAttribute("rolesSolicitante", solicitud.getRolesSolicitante());
@@ -208,7 +259,13 @@ public class SolicitudController {
 
     private boolean puedeCrear(Authentication authentication) {
         List<String> roles = rolesDe(authentication);
-        return roles.contains("Area de Ventas") || roles.contains("Area de Producto");
+        return roles.contains("Area de Ventas") || roles.contains("Area de Producto")
+                || roles.contains("Administración");
+    }
+
+    private boolean puedeConsultarAprobadas(Authentication authentication) {
+        List<String> roles = rolesDe(authentication);
+        return roles.contains("Area de Producto") || roles.contains("Area de Ventas");
     }
 
     private List<String> rolesDe(Authentication authentication) {
@@ -345,7 +402,9 @@ public class SolicitudController {
         boolean administracion = esAdministracion(authentication);
         boolean propietario = solicitud.getUsuario() != null
                 && authentication.getName().equals(solicitud.getUsuario().getUsername());
-        if (!administracion && !propietario) {
+        boolean aprobadaConsultable = solicitud.getEstado() == EstadoSolicitud.APROBADA
+                && puedeConsultarAprobadas(authentication);
+        if (!administracion && !propietario && !aprobadaConsultable) {
             redirectAttributes.addFlashAttribute("error", "No tienes acceso a esta constancia.");
             return "redirect:/solicitudes";
         }
