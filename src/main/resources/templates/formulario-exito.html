@@ -1,7 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+        <meta charset="UTF-8">
+<script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <title>Horizonte Turismo - Solicitud Enviada</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -1,17 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
+        <meta charset="UTF-8">
+<script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mi perfil - Nuevo Horizonte</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container container--narrow">
+<main id="contenido" tabindex="-1" class="container container--narrow">
     <div class="page-head">
         <div>
             <span class="eyebrow">
@@ -129,24 +139,41 @@
                   th:text="|${#lists.size(roles)} roles · ${totalModulos} módulos|"></span>
         </div>
 
+        <div class="permisos-legend" th:if="${!#lists.isEmpty(roles)}">
+            <span class="permiso-tag permiso-tag--lectura">
+                <svg class="icon"><use href="#i-eye"/></svg>
+                Lectura
+            </span>
+            <span class="permiso-tag permiso-tag--edicion">
+                <svg class="icon"><use href="#i-edit-3"/></svg>
+                Edición
+            </span>
+            <span class="permisos-legend__hint">Así se identifica el nivel de cada módulo.</span>
+        </div>
+
         <div class="perfil-roles" th:if="${!#lists.isEmpty(roles)}">
             <article class="perfil-rol" th:each="r : ${roles}"
                      th:style="|--rol-color:${r['color']};|">
-                <header>
-                    <span class="rol-dot" th:style="|background:${r['color']}|"></span>
-                    <div>
+                <header class="perfil-rol__head">
+                    <span class="perfil-rol__dot"></span>
+                    <div class="perfil-rol__title">
                         <strong th:text="${r['nombre']}"></strong>
                         <small th:text="|${#lists.size(r['permisos'])} módulos con acceso|"></small>
                     </div>
+                    <span class="perfil-rol__count" th:text="${#lists.size(r['permisos'])}"></span>
                 </header>
-                <p th:if="${r['descripcion'] != null and !r['descripcion'].isBlank()}"
+                <p class="perfil-rol__desc"
+                   th:if="${r['descripcion'] != null and !r['descripcion'].isBlank()}"
                    th:text="${r['descripcion']}"></p>
-                <div class="perfil-modulos" th:if="${!#lists.isEmpty(r['permisos'])}">
-                    <span class="perfil-modulo" th:each="p : ${r['permisos']}">
-                        <i></i>
-                        <span th:text="${p['etiqueta']}"></span>
-                        <em th:text="${p['nivel']}"></em>
-                    </span>
+                <div class="permisos-grid" th:if="${!#lists.isEmpty(r['permisos'])}">
+                    <div class="permiso-tag permiso-tag--card" th:each="p : ${r['permisos']}"
+                         th:classappend="${p['edicion']} ? 'permiso-tag--edicion' : 'permiso-tag--lectura'">
+                        <span class="permiso-tag__icon">
+                            <svg class="icon"><use th:href="${p['edicion']} ? '#i-edit-3' : '#i-eye'"/></svg>
+                        </span>
+                        <span class="permiso-tag__name" th:text="${p['etiqueta']}"></span>
+                        <span class="permiso-tag__level" th:text="${p['nivel']}"></span>
+                    </div>
                 </div>
                 <p class="form-hint" th:if="${#lists.isEmpty(r['permisos'])}">
                     Sin permisos vigentes en este rol.

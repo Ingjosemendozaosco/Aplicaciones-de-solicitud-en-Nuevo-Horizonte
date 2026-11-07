@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auditoría - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<div th:replace="~{fragments/icons :: icons}"></div>
+<header th:replace="~{fragments/topbar :: topbar}"></header>
+
+<main id="contenido" tabindex="-1" class="container">
+    <div class="page-head">
+        <div>
+            <span class="eyebrow">
+                <svg class="icon"><use href="#i-history"/></svg>
+                Control y trazabilidad
+            </span>
+            <h1>Auditoría</h1>
+            <p class="subtitle">Registro cronológico de las acciones realizadas sobre solicitudes y accesos.</p>
+        </div>
+    </div>
+
+    <div class="audit-summary">
+        <article class="audit-stat">
+            <span class="audit-stat__icon">
+                <svg class="icon"><use href="#i-history"/></svg>
+            </span>
+            <div>
+                <strong th:text="${pagina.totalElements}">0</strong>
+                <span>Eventos registrados</span>
+            </div>
+        </article>
+        <article class="audit-stat audit-stat--success">
+            <span class="audit-stat__icon">
+                <svg class="icon"><use href="#i-activity"/></svg>
+            </span>
+            <div>
+                <strong th:text="${#lists.size(acciones)}">0</strong>
+                <span>Tipos de acción</span>
+            </div>
+        </article>
+        <article class="audit-stat audit-stat--warn">
+            <span class="audit-stat__icon">
+                <svg class="icon"><use href="#i-layer"/></svg>
+            </span>
+            <div>
+                <strong th:text="${#lists.size(entidades)}">0</strong>
+                <span>Entidades auditadas</span>
+            </div>
+        </article>
+        <article class="audit-stat audit-stat--info">
+            <span class="audit-stat__icon">
+                <svg class="icon"><use href="#i-file-text"/></svg>
+            </span>
+            <div>
+                <strong th:text="${pagina.number + 1}">1</strong>
+                <span th:text="|de ${pagina.totalPages} páginas|">de 1 páginas</span>
+            </div>
+        </article>
+    </div>
+
+    <form class="filtros-solicitud" method="get" th:action="@{/auditoria}" role="search"
+          aria-label="Filtros de auditoría">
+        <div class="filtros-solicitud__head">
+            <span class="filtros-solicitud__title">
+                <svg class="icon"><use href="#i-filter"/></svg>
+                Filtrar eventos
+            </span>
+            <span class="filtros-solicitud__hint">20 eventos por página</span>
+        </div>
+        <div class="filtros-grid filtros-grid--audit">
+            <div class="field">
+                <label for="aAccion">Acción</label>
+                <select id="aAccion" name="accion">
+                    <option value="">Todas</option>
+                    <option th:each="a : ${acciones}" th:value="${a}" th:text="${a}"
+                            th:selected="${filtroAccion == a}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="aEntidad">Entidad</label>
+                <select id="aEntidad" name="entidad">
+                    <option value="">Todas</option>
+                    <option th:each="e : ${entidades}" th:value="${e}" th:text="${e}"
+                            th:selected="${filtroEntidad == e}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="aActor">Actor</label>
+                <input id="aActor" type="search" name="actor" th:value="${filtroActor}"
+                       placeholder="Usuario o sistema">
+            </div>
+            <div class="field">
+                <label for="aDesde">Desde</label>
+                <input id="aDesde" type="date" name="desde" th:value="${filtroDesde}">
+            </div>
+            <div class="field">
+                <label for="aHasta">Hasta</label>
+                <input id="aHasta" type="date" name="hasta" th:value="${filtroHasta}">
+            </div>
+            <div class="field">
+                <label for="aQ">Buscar</label>
+                <input id="aQ" type="search" name="q" th:value="${filtroQ}"
+                       placeholder="Detalle, actor, entidad o ID">
+            </div>
+            <div class="filtros-acciones">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-search"/></svg>
+                    Filtrar
+                </button>
+                <a th:href="@{/auditoria}" class="btn btn-ghost">
+                    <svg class="icon"><use href="#i-x"/></svg>
+                    Limpiar
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <div class="audit-active-filters"
+         th:if="${filtroAccion != null or filtroEntidad != null or filtroActor != null
+                 or filtroDesde != null or filtroHasta != null or filtroQ != null}">
+        <span class="audit-active-filters__label">Filtros activos</span>
+        <span class="audit-filter-chip" th:if="${filtroAccion != null}">
+            Acción: <strong th:text="${filtroAccion}"></strong>
+        </span>
+        <span class="audit-filter-chip" th:if="${filtroEntidad != null}">
+            Entidad: <strong th:text="${filtroEntidad}"></strong>
+        </span>
+        <span class="audit-filter-chip" th:if="${filtroActor != null}">
+            Actor: <strong th:text="${filtroActor}"></strong>
+        </span>
+        <span class="audit-filter-chip" th:if="${filtroDesde != null}">
+            Desde: <strong th:text="${#temporals.format(filtroDesde, 'dd/MM/yyyy')}"></strong>
+        </span>
+        <span class="audit-filter-chip" th:if="${filtroHasta != null}">
+            Hasta: <strong th:text="${#temporals.format(filtroHasta, 'dd/MM/yyyy')}"></strong>
+        </span>
+        <span class="audit-filter-chip" th:if="${filtroQ != null}">
+            Búsqueda: <strong th:text="${filtroQ}"></strong>
+        </span>
+        <a th:href="@{/auditoria}" class="audit-filter-clear">
+            <svg class="icon"><use href="#i-x"/></svg>
+            Quitar filtros
+        </a>
+    </div>
+
+    <section class="audit-results" th:if="${!#lists.isEmpty(eventos)}">
+        <div class="audit-results__head">
+            <span class="audit-results__count">
+                <svg class="icon"><use href="#i-list"/></svg>
+                Mostrando
+                <strong th:text="|${pagina.number * pagina.size + 1}–${pagina.number * pagina.size + pagina.numberOfElements}|">1–0</strong>
+                de
+                <strong th:text="${pagina.totalElements}">0</strong>
+                eventos
+            </span>
+            <span class="audit-results__order">
+                <svg class="icon"><use href="#i-clock"/></svg>
+                Más recientes primero
+            </span>
+        </div>
+
+        <div class="audit-timeline">
+            <article class="audit-item" th:each="evento : ${eventos}"
+                     th:classappend="|audit-item--${#strings.toLowerCase(evento.accion)}|">
+                <div class="audit-item__rail" aria-hidden="true">
+                    <span class="audit-item__dot">
+                        <svg class="icon">
+                            <th:block th:switch="${evento.accion}">
+                                <use th:case="'CREAR'" href="#i-plus"/>
+                                <use th:case="'APROBAR'" href="#i-check"/>
+                                <use th:case="'OTORGAR'" href="#i-key"/>
+                                <use th:case="'RECHAZAR'" href="#i-x"/>
+                                <use th:case="'REVOCAR'" href="#i-lock"/>
+                                <use th:case="'CAMBIAR_NIVEL'" href="#i-edit-3"/>
+                                <use th:case="'VENCIMIENTO'" href="#i-clock"/>
+                                <use th:case="*" href="#i-activity"/>
+                            </th:block>
+                        </svg>
+                    </span>
+                </div>
+
+                <div class="audit-item__card">
+                    <div class="audit-item__head">
+                        <span class="audit-action"
+                              th:classappend="|audit-action--${#strings.toLowerCase(evento.accion)}|"
+                              th:text="${#strings.capitalize(#strings.replace(#strings.toLowerCase(evento.accion), '_', ' '))}">
+                            Acción
+                        </span>
+                        <span class="audit-entity">
+                            <svg class="icon">
+                                <th:block th:switch="${evento.entidad}">
+                                    <use th:case="'Solicitud'" href="#i-file-text"/>
+                                    <use th:case="'Permiso'" href="#i-key"/>
+                                    <use th:case="'Rol'" href="#i-shield"/>
+                                    <use th:case="*" href="#i-layer"/>
+                                </th:block>
+                            </svg>
+                            <span th:text="${evento.entidad}">Entidad</span>
+                            <em th:if="${evento.entidadId != null}" th:text="|#${evento.entidadId}|">#1</em>
+                        </span>
+                        <time class="audit-item__date"
+                              th:text="${#temporals.format(evento.fecha, 'dd/MM/yyyy · HH:mm')}">06/11/2026 · 21:50</time>
+                    </div>
+
+                    <p class="audit-item__detail"
+                       th:text="${evento.detalle != null and !evento.detalle.isBlank() ? evento.detalle : 'Sin detalle adicional.'}">
+                        Detalle del evento
+                    </p>
+
+                    <div class="audit-item__foot">
+                        <span class="audit-actor">
+                            <span class="audit-actor__avatar"
+                                  th:text="${#strings.isEmpty(evento.actor) ? '?' : #strings.substring(evento.actor, 0, 1)}">A</span>
+                            <span th:text="${evento.actor}">actor</span>
+                        </span>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="table-pagination" th:if="${pagina.totalPages > 1}">
+            <a class="pager-btn" th:classappend="${!pagina.hasPrevious()} ? 'is-disabled'"
+               th:href="@{/auditoria(page=${pagina.number - 1}, accion=${filtroAccion}, entidad=${filtroEntidad}, actor=${filtroActor}, desde=${filtroDesde}, hasta=${filtroHasta}, q=${filtroQ})}">
+                Anterior
+            </a>
+            <div class="pager-nums">
+                <span class="pager-num active" th:text="${pagina.number + 1}"></span>
+                <span class="pager-total" th:text="|de ${pagina.totalPages}|"></span>
+            </div>
+            <a class="pager-btn" th:classappend="${!pagina.hasNext()} ? 'is-disabled'"
+               th:href="@{/auditoria(page=${pagina.number + 1}, accion=${filtroAccion}, entidad=${filtroEntidad}, actor=${filtroActor}, desde=${filtroDesde}, hasta=${filtroHasta}, q=${filtroQ})}">
+                Siguiente
+            </a>
+        </div>
+    </section>
+
+    <section class="card" th:if="${#lists.isEmpty(eventos)}">
+        <div class="empty">
+            <div class="empty-icon">
+                <svg class="icon"><use href="#i-history"/></svg>
+            </div>
+            <h2>Sin eventos de auditoría</h2>
+            <p>No hay registros que coincidan con los filtros seleccionados.</p>
+            <a th:href="@{/auditoria}" class="btn btn-secondary" style="margin-top:16px;">Quitar filtros</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

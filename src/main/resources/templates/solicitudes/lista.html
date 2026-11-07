@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Solicitudes - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container">
+<main id="contenido" tabindex="-1" class="container">
     <div class="page-head page-head--solicitudes">
         <div>
             <span class="eyebrow">
@@ -26,9 +36,13 @@
         </a>
     </div>
 
-    <div th:if="${mensaje}" class="alert">
+    <div th:if="${mensaje}" class="alert" role="status" aria-live="polite">
         <svg class="icon"><use href="#i-check-circle"/></svg>
         <span th:text="${mensaje}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-error" role="alert" aria-live="assertive">
+        <svg class="icon"><use href="#i-alert"/></svg>
+        <span th:text="${error}"></span>
     </div>
 
     <div class="stats-row" th:if="${!#lists.isEmpty(solicitudes)}">
@@ -69,14 +83,81 @@
         </div>
     </div>
 
+    <form class="filtros-solicitud" method="get" th:action="@{/solicitudes}" role="search"
+          aria-label="Filtros de solicitudes">
+        <div class="filtros-solicitud__head">
+            <span class="filtros-solicitud__title">
+                <svg class="icon"><use href="#i-filter"/></svg>
+                Filtros avanzados
+            </span>
+            <span class="filtros-solicitud__hint" th:if="${hayFiltros}">
+                Filtros aplicados. La búsqueda y la paginación conservan este resultado.
+            </span>
+        </div>
+        <div class="filtros-grid">
+            <div class="field">
+                <label for="fEstado">Estado</label>
+                <select id="fEstado" name="estado">
+                    <option value="">Todos</option>
+                    <option value="PENDIENTE" th:selected="${filtroEstado != null && filtroEstado.toString() == 'PENDIENTE'}">Pendiente</option>
+                    <option value="EN_REVISION" th:selected="${filtroEstado != null && filtroEstado.toString() == 'EN_REVISION'}">En revisión</option>
+                    <option value="APROBADA" th:selected="${filtroEstado != null && filtroEstado.toString() == 'APROBADA'}">Aprobada</option>
+                    <option value="RECHAZADA" th:selected="${filtroEstado != null && filtroEstado.toString() == 'RECHAZADA'}">Rechazada</option>
+                    <option value="BORRADOR" th:selected="${filtroEstado != null && filtroEstado.toString() == 'BORRADOR'}">Borrador</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="fArea">Área</label>
+                <select id="fArea" name="area">
+                    <option value="">Todas las áreas</option>
+                    <option th:each="a : ${areas}" th:value="${a}"
+                            th:text="${a}" th:selected="${filtroArea == a}"></option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="fDesde">Desde</label>
+                <input id="fDesde" type="date" name="desde" th:value="${filtroDesde}">
+            </div>
+            <div class="field">
+                <label for="fHasta">Hasta</label>
+                <input id="fHasta" type="date" name="hasta" th:value="${filtroHasta}">
+            </div>
+            <div class="field filtros-grid__q">
+                <label for="fQ">Buscar</label>
+                <input id="fQ" type="search" name="q" th:value="${filtroQ}"
+                       placeholder="N.º, solicitante, área, módulo o motivo">
+            </div>
+            <div class="filtros-acciones">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon"><use href="#i-search"/></svg>
+                    Filtrar
+                </button>
+                <a th:href="@{/solicitudes}" class="btn btn-ghost">
+                    <svg class="icon"><use href="#i-x"/></svg>
+                    Limpiar
+                </a>
+            </div>
+        </div>
+    </form>
+
     <section class="card card--table" th:if="${!#lists.isEmpty(solicitudes)}">
         <div class="table-toolbar">
-            <div class="filter-tabs" id="filtrosSolicitudes">
-                <button type="button" class="filter-tab active" data-filter="TODAS">Todas</button>
-                <button type="button" class="filter-tab" data-filter="PENDIENTE">Pendientes</button>
-                <button type="button" class="filter-tab" data-filter="EN_REVISION">En revisión</button>
-                <button type="button" class="filter-tab" data-filter="APROBADA">Aprobadas</button>
-                <button type="button" class="filter-tab" data-filter="RECHAZADA">Rechazadas</button>
+            <div class="filter-tabs" id="filtrosSolicitudes" role="tablist" aria-label="Filtro rápido por estado">
+                <button type="button" role="tab" class="filter-tab"
+                        th:classappend="${filtroEstado == null ? ' active' : ''}"
+                        th:attr="aria-selected=${filtroEstado == null}" data-filter="TODAS">Todas</button>
+                <button type="button" role="tab" class="filter-tab"
+                        th:classappend="${filtroEstado != null && filtroEstado.toString() == 'PENDIENTE' ? ' active' : ''}"
+                        th:attr="aria-selected=${filtroEstado != null && filtroEstado.toString() == 'PENDIENTE'}" data-filter="PENDIENTE">Pendientes</button>
+                <button type="button" role="tab" class="filter-tab"
+                        th:classappend="${filtroEstado != null && filtroEstado.toString() == 'EN_REVISION' ? ' active' : ''}"
+                        th:attr="aria-selected=${filtroEstado != null && filtroEstado.toString() == 'EN_REVISION'}" data-filter="EN_REVISION">En revisión</button>
+                <button type="button" role="tab" class="filter-tab"
+                        th:classappend="${filtroEstado != null && filtroEstado.toString() == 'APROBADA' ? ' active' : ''}"
+                        th:attr="aria-selected=${filtroEstado != null && filtroEstado.toString() == 'APROBADA'}" data-filter="APROBADA">Aprobadas</button>
+                <button type="button" role="tab" class="filter-tab"
+                        th:classappend="${filtroEstado != null && filtroEstado.toString() == 'RECHAZADA' ? ' active' : ''}"
+                        th:attr="aria-selected=${filtroEstado != null && filtroEstado.toString() == 'RECHAZADA'}" data-filter="RECHAZADA">Rechazadas</button>
             </div>
             <div class="table-tools">
                 <span class="nueva-leyenda" title="Las solicitudes pendientes se muestran primero">
@@ -96,7 +177,7 @@
                     <option value="estado">Estado</option>
                 </select>
             </div>
-            <span class="table-count" id="contadorFilas"
+            <span class="table-count" id="contadorFilas" role="status" aria-live="polite"
                   th:text="|${total} ${total == 1 ? 'solicitud' : 'solicitudes'}|"></span>
         </div>
 
@@ -186,10 +267,16 @@
             <div class="empty-icon">
                 <svg class="icon"><use href="#i-file"/></svg>
             </div>
-            <h2>Sin solicitudes registradas</h2>
-            <p th:if="${puedeCrear}">Registra la primera solicitud para iniciar el seguimiento.</p>
-            <p th:unless="${puedeCrear}">Aún no hay solicitudes en el sistema.</p>
-            <a th:if="${puedeCrear}" th:href="@{/solicitudes/nueva}" class="btn btn-primary"
+            <h2 th:text="${hayFiltros ? 'Sin resultados para esos filtros' : 'Sin solicitudes registradas'}"></h2>
+            <p th:if="${hayFiltros}">Ajusta el estado, el área o el rango de fechas e inténtalo nuevamente.</p>
+            <p th:if="${!hayFiltros && puedeCrear}">Registra la primera solicitud para iniciar el seguimiento.</p>
+            <p th:if="${!hayFiltros && !puedeCrear}">Aún no hay solicitudes en el sistema.</p>
+            <a th:if="${hayFiltros}" th:href="@{/solicitudes}" class="btn btn-secondary"
+               style="margin-top:18px;">
+                <svg class="icon"><use href="#i-x"/></svg>
+                Quitar filtros
+            </a>
+            <a th:if="${puedeCrear && !hayFiltros}" th:href="@{/solicitudes/nueva}" class="btn btn-primary"
                style="margin-top:18px;">
                 <svg class="icon"><use href="#i-plus"/></svg>
                 Crear solicitud
@@ -212,7 +299,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!filas.length) {
         return;
     }
-    const estado = { filtro: 'TODAS', texto: '', orden: 'nueva', pagina: 1, porPagina: 8 };
+    const tabActiva = document.querySelector('.filter-tab.active');
+    const estado = {
+        filtro: tabActiva ? tabActiva.dataset.filter : 'TODAS',
+        texto: '',
+        orden: 'nueva',
+        pagina: 1,
+        porPagina: 8
+    };
 
     function normalizar(valor) {
         return (valor || '').toString().toLowerCase()
@@ -303,8 +397,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     tabs.forEach(function (tab) {
         tab.addEventListener('click', function () {
-            tabs.forEach(function (t) { t.classList.remove('active'); });
+            tabs.forEach(function (t) {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+            });
             tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
             estado.filtro = tab.dataset.filter;
             estado.pagina = 1;
             render();

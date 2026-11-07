@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Usuarios - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container">
+<main id="contenido" tabindex="-1" class="container">
     <div class="page-head">
         <div>
             <span class="eyebrow">
@@ -26,18 +36,27 @@
         </a>
     </div>
 
-    <div th:if="${mensaje}" class="alert">
+    <div th:if="${mensaje}" class="alert" role="status" aria-live="polite">
         <svg class="icon"><use href="#i-check-circle"/></svg>
         <span th:text="${mensaje}"></span>
     </div>
-    <div th:if="${error}" class="alert alert-error">
+    <div th:if="${error}" class="alert alert-error" role="alert" aria-live="assertive">
         <svg class="icon"><use href="#i-alert"/></svg>
         <span th:text="${error}"></span>
     </div>
 
     <section class="card card--table">
+        <div class="table-toolbar">
+            <div class="search-box">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <input id="buscarUsuarios" type="search" autocomplete="off"
+                       placeholder="Buscar usuario, correo, cargo o rol...">
+            </div>
+            <span class="table-count" id="contadorUsuarios" role="status" aria-live="polite"
+                  th:text="|${#lists.size(usuarios)} usuarios|"></span>
+        </div>
         <div class="table-wrap">
-            <table>
+            <table id="tablaUsuarios">
                 <thead>
                 <tr>
                     <th>Usuario</th>
@@ -50,7 +69,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="u : ${usuarios}">
+                <tr th:each="u : ${usuarios}"
+                    th:attr="data-texto=${#strings.toLowerCase(u.username + ' ' + (u.email != null ? u.email : '') + ' ' + (u.cargoFormal != null ? u.cargoFormal : '') + ' ' + (u.roles != null ? #strings.listJoin(u.roles, ' ') : '') + ' ' + (u.activo ? 'activo' : 'inactivo'))}">
                     <td>
                         <strong th:text="${u.username}"></strong>
                     </td>
@@ -95,7 +115,107 @@
                 </tbody>
             </table>
         </div>
+        <div class="table-empty-filter" id="sinUsuarios" style="display:none;">
+            No hay usuarios que coincidan con la búsqueda.
+        </div>
+        <div class="table-pagination" th:if="${!#lists.isEmpty(usuarios)}">
+            <button type="button" class="pager-btn" id="usuariosAnterior">Anterior</button>
+            <div class="pager-nums" id="usuariosNumeros"></div>
+            <button type="button" class="pager-btn" id="usuariosSiguiente">Siguiente</button>
+        </div>
     </section>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filas = Array.prototype.slice.call(
+        document.querySelectorAll('#tablaUsuarios tbody tr'));
+    const buscador = document.getElementById('buscarUsuarios');
+    const contador = document.getElementById('contadorUsuarios');
+    const sinResultados = document.getElementById('sinUsuarios');
+    const prev = document.getElementById('usuariosAnterior');
+    const next = document.getElementById('usuariosSiguiente');
+    const nums = document.getElementById('usuariosNumeros');
+    if (!filas.length) {
+        return;
+    }
+    const estado = { texto: '', pagina: 1, porPagina: 8 };
+
+    function normalizar(valor) {
+        return (valor || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function filtradas() {
+        return filas.filter(function (fila) {
+            return !estado.texto
+                || normalizar(fila.dataset.texto).indexOf(estado.texto) !== -1;
+        });
+    }
+
+    function pintarPaginacion(totalPaginas) {
+        if (nums) {
+            nums.innerHTML = '';
+            for (let i = 1; i <= totalPaginas; i++) {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.className = 'pager-num' + (i === estado.pagina ? ' active' : '');
+                boton.textContent = i;
+                boton.addEventListener('click', function () {
+                    estado.pagina = i;
+                    render();
+                });
+                nums.appendChild(boton);
+            }
+        }
+        if (prev) prev.disabled = estado.pagina === 1;
+        if (next) next.disabled = estado.pagina >= totalPaginas;
+    }
+
+    function render() {
+        const lista = filtradas();
+        const totalPaginas = Math.max(1, Math.ceil(lista.length / estado.porPagina));
+        if (estado.pagina > totalPaginas) {
+            estado.pagina = totalPaginas;
+        }
+        const inicio = (estado.pagina - 1) * estado.porPagina;
+        const visibles = lista.slice(inicio, inicio + estado.porPagina);
+        filas.forEach(function (fila) { fila.style.display = 'none'; });
+        visibles.forEach(function (fila) { fila.style.display = ''; });
+        if (contador) {
+            contador.textContent = lista.length === 0
+                ? '0 usuarios'
+                : (inicio + 1) + '–' + Math.min(inicio + estado.porPagina, lista.length)
+                    + ' de ' + lista.length;
+        }
+        if (sinResultados) {
+            sinResultados.style.display = lista.length === 0 ? 'block' : 'none';
+        }
+        pintarPaginacion(totalPaginas);
+    }
+
+    if (buscador) {
+        buscador.addEventListener('input', function () {
+            estado.texto = normalizar(buscador.value.trim());
+            estado.pagina = 1;
+            render();
+        });
+    }
+    if (prev) {
+        prev.addEventListener('click', function () {
+            if (estado.pagina > 1) {
+                estado.pagina--;
+                render();
+            }
+        });
+    }
+    if (next) {
+        next.addEventListener('click', function () {
+            estado.pagina++;
+            render();
+        });
+    }
+    render();
+});
+</script>
 </body>
 </html>

@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -23,7 +24,13 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "solicitud")
+@Table(name = "solicitud", indexes = {
+        @Index(name = "idx_solicitud_estado", columnList = "estado"),
+        @Index(name = "idx_solicitud_area", columnList = "area_solicitante"),
+        @Index(name = "idx_solicitud_fecha_solicitud", columnList = "fecha_solicitud"),
+        @Index(name = "idx_solicitud_fecha_creacion", columnList = "fecha_creacion"),
+        @Index(name = "idx_solicitud_fecha_fin_acceso", columnList = "fecha_fin_acceso")
+})
 public class Solicitud {
 
     @Id

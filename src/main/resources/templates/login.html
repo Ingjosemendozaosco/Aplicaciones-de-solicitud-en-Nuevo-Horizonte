@@ -1,66 +1,156 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Iniciar sesión - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body class="login-page">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 
 <div class="login-orb orb-1"></div>
 <div class="login-orb orb-2"></div>
 <div class="login-orb orb-3"></div>
 
-<main class="login-card">
-    <div class="login-brand">
-        <span class="logo-badge">
-            <svg class="icon"><use href="#i-compass"/></svg>
-        </span>
-        <div>
-            <h1>Nuevo Horizonte</h1>
-            <p>Gestión de solicitudes</p>
+<main id="contenido" tabindex="-1" class="login-shell">
+    <section class="login-showcase" aria-label="Información del sistema">
+        <div class="login-showcase__brand">
+            <span class="logo-badge">
+                <svg class="icon"><use href="#i-compass"/></svg>
+            </span>
+            <div>
+                <strong>Nuevo Horizonte</strong>
+                <span>Gestión de solicitudes</span>
+            </div>
         </div>
-    </div>
 
-    <h2>Iniciar sesión</h2>
+        <div class="login-showcase__body">
+            <span class="login-kicker">
+                <svg class="icon"><use href="#i-sparkles"/></svg>
+                Plataforma interna
+            </span>
+            <h1>Un solo lugar para solicitar, aprobar y controlar accesos.</h1>
+            <p>Gestiona solicitudes de información y permisos por módulo con trazabilidad, vigencias y notificaciones automáticas.</p>
 
-    <div th:if="${param.error}" class="alert alert-error">
-        <svg class="icon"><use href="#i-alert"/></svg>
-        Usuario o contraseña incorrectos.
-    </div>
-    <div th:if="${param.logout}" class="alert">
-        <svg class="icon"><use href="#i-check-circle"/></svg>
-        Sesión cerrada correctamente.
-    </div>
+            <ul class="login-benefits">
+                <li>
+                    <span class="login-benefit__icon"><svg class="icon"><use href="#i-file-text"/></svg></span>
+                    <span>
+                        <strong>Solicitudes ordenadas</strong>
+                        <small>Flujo claro de revisión, aprobación y constancias.</small>
+                    </span>
+                </li>
+                <li>
+                    <span class="login-benefit__icon"><svg class="icon"><use href="#i-shield-check"/></svg></span>
+                    <span>
+                        <strong>Accesos con vigencia</strong>
+                        <small>Controla niveles, fechas y revocaciones automáticas.</small>
+                    </span>
+                </li>
+                <li>
+                    <span class="login-benefit__icon"><svg class="icon"><use href="#i-history"/></svg></span>
+                    <span>
+                        <strong>Auditoría completa</strong>
+                        <small>Cada acción queda registrada para consulta.</small>
+                    </span>
+                </li>
+            </ul>
+        </div>
 
-    <form class="login-form" th:action="@{/login}" method="post">
-        <div class="field">
-            <label for="username">Usuario</label>
-            <div class="input-group">
+        <div class="login-showcase__foot">
+            <span><svg class="icon icon-xs"><use href="#i-lock"/></svg> Acceso seguro</span>
+            <span>© 2026 Nuevo Horizonte</span>
+        </div>
+    </section>
+
+    <section class="login-card login-card--panel" aria-labelledby="loginTitulo">
+        <div class="login-panel__head">
+            <span class="login-panel__avatar">
                 <svg class="icon"><use href="#i-user"/></svg>
-                <input id="username" name="username" type="text"
-                       placeholder="Tu usuario" required autofocus
-                       autocomplete="username">
+            </span>
+            <div>
+                <span class="eyebrow">Bienvenido de nuevo</span>
+                <h2 id="loginTitulo">Inicia sesión</h2>
+                <p>Usa tus credenciales corporativas para continuar.</p>
             </div>
         </div>
 
-        <div class="field">
-            <label for="password">Contraseña</label>
-            <div class="input-group">
-                <svg class="icon"><use href="#i-lock"/></svg>
-                <input id="password" name="password" type="password"
-                       placeholder="••••••••" required autocomplete="current-password">
-            </div>
+        <div th:if="${param.error}" class="alert alert-error" role="alert" aria-live="assertive">
+            <svg class="icon"><use href="#i-alert"/></svg>
+            <span>Usuario o contraseña incorrectos. Verifica tus datos e inténtalo de nuevo.</span>
+        </div>
+        <div th:if="${param.logout}" class="login-notify login-notify--success" role="status" aria-live="polite">
+            <svg class="icon icon-xs"><use href="#i-check-circle"/></svg>
+            <span>Sesión cerrada correctamente.</span>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block">
-            Ingresar
-        </button>
-    </form>
+        <form class="login-form" th:action="@{/login}" method="post">
+            <div class="field">
+                <label for="username">Usuario</label>
+                <div class="input-group">
+                    <svg class="icon"><use href="#i-user"/></svg>
+                    <input id="username" name="username" type="text"
+                           placeholder="Tu usuario" required autofocus
+                           autocomplete="username">
+                </div>
+            </div>
 
-    <p class="login-footer">© 2026 Nuevo Horizonte</p>
+            <div class="field">
+                <label for="password">Contraseña</label>
+                <div class="input-group input-group--password">
+                    <svg class="icon"><use href="#i-lock"/></svg>
+                    <input id="password" name="password" type="password"
+                           placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" id="passwordToggle"
+                            aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                        <svg class="icon icon-xs icon-eye"><use href="#i-eye"/></svg>
+                        <svg class="icon icon-xs icon-eye-off"><use href="#i-eye-off"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block login-submit">
+                <svg class="icon"><use href="#i-logout"/></svg>
+                Ingresar al sistema
+            </button>
+        </form>
+
+        <div class="login-safe">
+            <svg class="icon icon-xs"><use href="#i-shield"/></svg>
+            <span>Tu sesión está protegida con autenticación y control de acceso por roles.</span>
+        </div>
+
+        <p class="login-footer">¿Problemas para ingresar? Contacta a Gerencia o Administración.</p>
+    </section>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var boton = document.getElementById('passwordToggle');
+    var campo = document.getElementById('password');
+    if (!boton || !campo) {
+        return;
+    }
+    boton.addEventListener('click', function () {
+        var visible = campo.type === 'text';
+        campo.type = visible ? 'password' : 'text';
+        boton.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+        boton.setAttribute('title', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+        boton.classList.toggle('is-visible', !visible);
+        campo.focus();
+    });
+});
+</script>
 </body>
 </html>

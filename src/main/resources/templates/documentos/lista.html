@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Documentos - Nuevo Horizonte</title>
+    <script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container">
+<main id="contenido" tabindex="-1" class="container">
     <div class="page-head">
         <div>
             <span class="eyebrow">
@@ -22,11 +32,11 @@
         </div>
     </div>
 
-    <div th:if="${mensaje}" class="alert">
+    <div th:if="${mensaje}" class="alert" role="status" aria-live="polite">
         <svg class="icon"><use href="#i-check-circle"/></svg>
         <span th:text="${mensaje}"></span>
     </div>
-    <div th:if="${error}" class="alert alert-error">
+    <div th:if="${error}" class="alert alert-error" role="alert" aria-live="assertive">
         <svg class="icon"><use href="#i-alert"/></svg>
         <span th:text="${error}"></span>
     </div>
@@ -83,11 +93,17 @@
                 <svg class="icon"><use href="#i-layer"/></svg>
                 Catálogo de documentos
             </h2>
-            <span class="table-count" th:text="|${#lists.size(documentos)} documentos|"></span>
+            <div class="search-box">
+                <svg class="icon"><use href="#i-search"/></svg>
+                <input id="buscarDocumentos" type="search" autocomplete="off"
+                       placeholder="Buscar nombre, categoría, archivo o autor...">
+            </div>
+            <span class="table-count" id="contadorDocumentos" role="status" aria-live="polite"
+                  th:text="|${#lists.size(documentos)} documentos|"></span>
         </div>
 
         <div class="table-wrap" th:if="${!#lists.isEmpty(documentos)}">
-            <table class="solicitudes-table">
+            <table class="solicitudes-table" id="tablaDocumentos">
                 <thead>
                 <tr>
                     <th>Documento</th>
@@ -101,7 +117,8 @@
                 </thead>
                 <tbody>
                 <tr th:each="d : ${documentos}"
-                    th:classappend="${!d.activo} ? 'doc-inactivo' : ''">
+                    th:classappend="${!d.activo} ? 'doc-inactivo' : ''"
+                    th:attr="data-texto=${#strings.toLowerCase(d.nombre + ' ' + (d.descripcion != null ? d.descripcion : '') + ' ' + (d.categoria != null ? d.categoria : '') + ' ' + (d.nombreArchivo != null ? d.nombreArchivo : '') + ' ' + (d.subidoPor != null ? d.subidoPor : '') + ' ' + (d.activo ? 'activo' : 'inactivo'))}">
                     <td>
                         <strong th:text="${d.nombre}"></strong>
                         <small th:if="${d.descripcion != null}" th:text="${d.descripcion}"
@@ -140,6 +157,15 @@
             </table>
         </div>
 
+        <div class="table-empty-filter" id="sinDocumentos" style="display:none;">
+            No hay documentos que coincidan con la búsqueda.
+        </div>
+        <div class="table-pagination" th:if="${!#lists.isEmpty(documentos)}">
+            <button type="button" class="pager-btn" id="documentosAnterior">Anterior</button>
+            <div class="pager-nums" id="documentosNumeros"></div>
+            <button type="button" class="pager-btn" id="documentosSiguiente">Siguiente</button>
+        </div>
+
         <div class="empty" th:if="${#lists.isEmpty(documentos)}">
             <div class="empty-icon">
                 <svg class="icon"><use href="#i-file"/></svg>
@@ -149,5 +175,97 @@
         </div>
     </section>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filas = Array.prototype.slice.call(
+        document.querySelectorAll('#tablaDocumentos tbody tr'));
+    const buscador = document.getElementById('buscarDocumentos');
+    const contador = document.getElementById('contadorDocumentos');
+    const sinResultados = document.getElementById('sinDocumentos');
+    const prev = document.getElementById('documentosAnterior');
+    const next = document.getElementById('documentosSiguiente');
+    const nums = document.getElementById('documentosNumeros');
+    if (!filas.length) {
+        return;
+    }
+    const estado = { texto: '', pagina: 1, porPagina: 8 };
+
+    function normalizar(valor) {
+        return (valor || '').toString().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function filtradas() {
+        return filas.filter(function (fila) {
+            return !estado.texto
+                || normalizar(fila.dataset.texto).indexOf(estado.texto) !== -1;
+        });
+    }
+
+    function pintarPaginacion(totalPaginas) {
+        if (nums) {
+            nums.innerHTML = '';
+            for (let i = 1; i <= totalPaginas; i++) {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.className = 'pager-num' + (i === estado.pagina ? ' active' : '');
+                boton.textContent = i;
+                boton.addEventListener('click', function () {
+                    estado.pagina = i;
+                    render();
+                });
+                nums.appendChild(boton);
+            }
+        }
+        if (prev) prev.disabled = estado.pagina === 1;
+        if (next) next.disabled = estado.pagina >= totalPaginas;
+    }
+
+    function render() {
+        const lista = filtradas();
+        const totalPaginas = Math.max(1, Math.ceil(lista.length / estado.porPagina));
+        if (estado.pagina > totalPaginas) {
+            estado.pagina = totalPaginas;
+        }
+        const inicio = (estado.pagina - 1) * estado.porPagina;
+        const visibles = lista.slice(inicio, inicio + estado.porPagina);
+        filas.forEach(function (fila) { fila.style.display = 'none'; });
+        visibles.forEach(function (fila) { fila.style.display = ''; });
+        if (contador) {
+            contador.textContent = lista.length === 0
+                ? '0 documentos'
+                : (inicio + 1) + '–' + Math.min(inicio + estado.porPagina, lista.length)
+                    + ' de ' + lista.length;
+        }
+        if (sinResultados) {
+            sinResultados.style.display = lista.length === 0 ? 'block' : 'none';
+        }
+        pintarPaginacion(totalPaginas);
+    }
+
+    if (buscador) {
+        buscador.addEventListener('input', function () {
+            estado.texto = normalizar(buscador.value.trim());
+            estado.pagina = 1;
+            render();
+        });
+    }
+    if (prev) {
+        prev.addEventListener('click', function () {
+            if (estado.pagina > 1) {
+                estado.pagina--;
+                render();
+            }
+        });
+    }
+    if (next) {
+        next.addEventListener('click', function () {
+            estado.pagina++;
+            render();
+        });
+    }
+    render();
+});
+</script>
 </body>
 </html>

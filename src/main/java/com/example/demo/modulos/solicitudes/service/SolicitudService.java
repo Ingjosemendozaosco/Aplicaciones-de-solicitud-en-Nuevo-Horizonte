@@ -1,6 +1,7 @@
 package com.example.demo.modulos.solicitudes.service;
 
 import com.example.demo.config.CorreoService;
+import com.example.demo.modulos.auditoria.service.AuditoriaService;
 import com.example.demo.modulos.documentos.entity.Documento;
 import com.example.demo.modulos.documentos.repository.DocumentoRepository;
 import com.example.demo.modulos.gestionUsuariosRolesPermisos.entity.Rol;
@@ -39,6 +40,7 @@ import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,7 @@ public class SolicitudService {
     private final RolPermisoRepository rolPermisoRepository;
     private final DocumentoRepository documentoRepository;
     private final NotificacionService notificacionService;
+    private final AuditoriaService auditoriaService;
     private final String urlPublica;
 
     public SolicitudService(SolicitudRepository solicitudRepository,
@@ -78,6 +81,7 @@ public class SolicitudService {
                             RolPermisoRepository rolPermisoRepository,
                             DocumentoRepository documentoRepository,
                             NotificacionService notificacionService,
+                            AuditoriaService auditoriaService,
                             @Value("${app.public-url:http://localhost:8080}") String urlPublica) {
         this.solicitudRepository = solicitudRepository;
         this.usuarioRepository = usuarioRepository;
@@ -86,6 +90,7 @@ public class SolicitudService {
         this.rolPermisoRepository = rolPermisoRepository;
         this.documentoRepository = documentoRepository;
         this.notificacionService = notificacionService;
+        this.auditoriaService = auditoriaService;
         this.urlPublica = urlPublica;
     }
 
@@ -106,6 +111,8 @@ public class SolicitudService {
             adjuntarArchivo(solicitud, dto.getArchivo());
         }
         Solicitud guardada = solicitudRepository.save(solicitud);
+        auditoriaService.registrar("CREAR", "Solicitud", guardada.getId(),
+                "Solicitud " + numero + " creada por " + username + ".");
         notificacionService.crearParaRol("Administración",
                 "Nueva solicitud " + numero,
                 dto.getNombreSolicitante() + " (" + dto.getAreaSolicitante()
@@ -134,6 +141,8 @@ public class SolicitudService {
             adjuntarArchivo(solicitud, dto.getArchivo());
         }
         Solicitud guardada = solicitudRepository.save(solicitud);
+        auditoriaService.registrar("CREAR", "Solicitud", guardada.getId(),
+                "Borrador " + numero + " guardado por " + username + ".");
         // No enviamos notificación para borradores
         return solicitudMapper.toResponse(guardada);
     }
@@ -263,6 +272,62 @@ public class SolicitudService {
     }
 
     @Transactional(readOnly = true)
+    public List<SolicitudResponseDTO> listarFiltrado(EstadoSolicitud estado, String area,
+                                                     LocalDate desde, LocalDate hasta,
+                                                     String username, String texto) {
+        String patron = null;
+        if (texto != null && !texto.isBlank()) {
+            patron = "%" + texto.trim().toLowerCase() + "%";
+        }
+        return solicitudRepository.buscarFiltrado(estado,
+                        area != null && !area.isBlank() ? area.trim() : null,
+                        desde, hasta, username, patron).stream()
+                .map(solicitudMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> listarAreas() {
+        return solicitudRepository.areasDistintas();
+    }
+
+    @Transactional(readOnly = true)
+    public SolicitudRequestDTO paraDuplicar(Long id, String username, boolean administracion) {
+        Solicitud solicitud = buscarEntidadPorId(id);
+        boolean propietario = solicitud.getUsuario() != null
+                && username.equals(solicitud.getUsuario().getUsername());
+        if (!propietario && !administracion) {
+            throw new IllegalArgumentException("Solo el solicitante o Administración pueden duplicar esta solicitud.");
+        }
+        SolicitudRequestDTO dto = new SolicitudRequestDTO();
+        dto.setTipoSolicitud(solicitud.getTipoSolicitud());
+        dto.setNombreSolicitante(solicitud.getNombreSolicitante());
+        dto.setAreaSolicitante(solicitud.getAreaSolicitante());
+        dto.setMotivo(solicitud.getMotivo());
+        dto.setResponsableAprobacion(solicitud.getResponsableAprobacion());
+        dto.setFechaSolicitud(LocalDate.now());
+        dto.setPermanente(solicitud.isPermanente());
+        dto.setFechaInicioAcceso(solicitud.getFechaInicioAcceso() != null
+                ? solicitud.getFechaInicioAcceso() : LocalDate.now());
+        dto.setFechaFinAcceso(solicitud.getFechaFinAcceso());
+        if (solicitud.getTipoSolicitud() == TipoSolicitud.ACCESO) {
+            List<String> modulos = new ArrayList<>();
+            Map<String, String> niveles = new LinkedHashMap<>();
+            solicitud.getDetalles().forEach(detalle -> {
+                modulos.add(detalle.getModulo());
+                niveles.put(detalle.getModulo(),
+                        detalle.getNivel() == NivelAcceso.EDICION ? "EDICION" : "LECTURA");
+            });
+            dto.setModulosAcceso(modulos);
+            dto.setNivelesModulo(niveles);
+        } else {
+            dto.setTipoInformacion("OTRO");
+            dto.setRecursoModulo(solicitud.getRecursoModulo());
+        }
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
     public SolicitudResponseDTO buscarPorId(Long id) {
         Solicitud solicitud = solicitudRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitud no encontrada: " + id));
@@ -315,6 +380,14 @@ public class SolicitudService {
             otorgarAccesos(solicitud);
         }
         Solicitud guardada = solicitudRepository.save(solicitud);
+        auditoriaService.registrar(estado == EstadoSolicitud.APROBADA ? "APROBAR" : "RECHAZAR",
+                "Solicitud", guardada.getId(),
+                "Solicitud " + guardada.getNumeroSolicitud() + " marcada como " + estado + ".");
+        if (estado == EstadoSolicitud.APROBADA
+                && guardada.getTipoSolicitud() == TipoSolicitud.ACCESO) {
+            auditoriaService.registrar("OTORGAR", "Solicitud", guardada.getId(),
+                    "Accesos otorgados para la solicitud " + guardada.getNumeroSolicitud() + ".");
+        }
         notificarDecision(guardada);
         if (guardada.getUsuario() != null) {
             notificacionService.crear(guardada.getUsuario().getUsername(),
@@ -369,20 +442,24 @@ public class SolicitudService {
                             return nuevo;
                         });
 
-                        if (permiso.getTipoVigencia() == TipoVigencia.DEFINITIVO && permiso.isActivo()) {
-                            continue;
-                        }
+                        boolean definitivoExistente = permiso.getTipoVigencia() == TipoVigencia.DEFINITIVO
+                                && permiso.isActivo()
+                                && permiso.getFechaFin() == null;
 
+                        // Siempre se garantiza el nivel solicitado. Nunca se quita un nivel
+                        // superior que el usuario ya tuviera (p. ej. Edición al pedir Lectura).
                         permiso.setPuedeLeer(true);
                         if (puedeEditar) {
                             permiso.setPuedeCrear(true);
                             permiso.setPuedeActualizar(true);
                         }
-                        permiso.setTipoVigencia(permanente
-                                ? TipoVigencia.DEFINITIVO
-                                : TipoVigencia.TEMPORAL);
-                        permiso.setFechaInicio(fechaInicio);
-                        permiso.setFechaFin(fechaFin);
+                        if (!definitivoExistente) {
+                            permiso.setTipoVigencia(permanente
+                                    ? TipoVigencia.DEFINITIVO
+                                    : TipoVigencia.TEMPORAL);
+                            permiso.setFechaInicio(fechaInicio);
+                            permiso.setFechaFin(fechaFin);
+                        }
                         permiso.setActivo(true);
                         permiso.setOrigenSolicitud(solicitud.getNumeroSolicitud());
                         rolPermisoRepository.save(permiso);
@@ -487,6 +564,98 @@ public class SolicitudService {
         return resultado;
     }
 
+    /**
+     * Módulos del catálogo sobre los que el usuario no tiene ningún permiso vigente.
+     * Se usa para que /solicitudes/nueva solo ofrezca lo que realmente le falta.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, String> modulosSinAcceso(String username) {
+        Set<String> conAcceso = new HashSet<>();
+        Usuario usuario = username == null ? null
+                : usuarioRepository.findByUsername(username).orElse(null);
+        if (usuario != null) {
+            for (Rol rol : usuario.rolesVigentes()) {
+                if (rol == null || !rol.isActivo()) {
+                    continue;
+                }
+                for (RolPermiso permiso : rol.getRolPermisos()) {
+                    if (permiso.esVigente()
+                            && (permiso.isPuedeLeer() || permiso.isPuedeCrear()
+                            || permiso.isPuedeActualizar() || permiso.isPuedeEliminar())) {
+                        conAcceso.add(permiso.getModulo());
+                    }
+                }
+            }
+        }
+        Map<String, String> resultado = new LinkedHashMap<>();
+        for (String modulo : ModuloCatalogo.todos()) {
+            if (!conAcceso.contains(modulo)) {
+                resultado.put(modulo, ModuloCatalogo.etiqueta(modulo));
+            }
+        }
+        return resultado;
+    }
+
+    private boolean tieneAccesoModulo(Usuario usuario, String modulo) {
+        if (usuario == null || modulo == null) {
+            return false;
+        }
+        for (Rol rol : usuario.rolesVigentes()) {
+            if (rol == null || !rol.isActivo()) {
+                continue;
+            }
+            for (RolPermiso permiso : rol.getRolPermisos()) {
+                if (modulo.equals(permiso.getModulo()) && permiso.esVigente()
+                        && (permiso.isPuedeLeer() || permiso.isPuedeCrear()
+                        || permiso.isPuedeActualizar() || permiso.isPuedeEliminar())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Documentos activos que el usuario todavía no ha recibido en una solicitud
+     * de información aprobada. Los documentos entregados quedan vinculados por
+     * el nombre del archivo del informe.
+     */
+    @Transactional(readOnly = true)
+    public List<Documento> documentosSinRecibir(String username) {
+        List<Documento> activos = documentoRepository.findByActivoTrueOrderByFechaSubidaDesc();
+        if (username == null) {
+            return activos;
+        }
+        Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
+        if (usuario != null && tieneAccesoModulo(usuario, ModuloCatalogo.DOCUMENTOS)) {
+            // Ya tiene acceso completo al módulo de Documentos: no necesita pedir ninguno.
+            return List.of();
+        }
+        Set<String> recibidos = new HashSet<>();
+        for (Solicitud solicitud : solicitudRepository.findByUsuarioUsername(username)) {
+            if (solicitud.getEstado() != EstadoSolicitud.APROBADA
+                    || solicitud.getTipoSolicitud() != TipoSolicitud.INFORMACION) {
+                continue;
+            }
+            if (solicitud.getNombreInforme() != null && !solicitud.getNombreInforme().isBlank()) {
+                recibidos.add(normalizar(solicitud.getNombreInforme()));
+            }
+        }
+        List<Documento> pendientes = new ArrayList<>();
+        for (Documento documento : activos) {
+            boolean yaRecibido = recibidos.contains(normalizar(documento.getNombreArchivo()))
+                    || recibidos.contains(normalizar(documento.getNombre()));
+            if (!yaRecibido) {
+                pendientes.add(documento);
+            }
+        }
+        return pendientes;
+    }
+
+    private static String normalizar(String valor) {
+        return valor == null ? "" : valor.trim().toLowerCase();
+    }
+
     public List<AreaDisponibleDTO> areasDisponibles(List<ModuloDisponibleDTO> modulos) {
         Map<String, AreaDisponibleDTO> porArea = new LinkedHashMap<>();
         for (ModuloDisponibleDTO modulo : modulos) {
@@ -523,6 +692,9 @@ public class SolicitudService {
         permiso.setPuedeEliminar(false);
         permiso.setActivo(true);
         rolPermisoRepository.save(permiso);
+        auditoriaService.registrar("CAMBIAR_NIVEL", "Permiso", permiso.getId(),
+                "Nivel de " + permiso.getModulo() + " cambiado a "
+                        + (edicion ? "EDICION" : "LECTURA") + ".");
     }
 
     @Transactional
@@ -530,6 +702,8 @@ public class SolicitudService {
         RolPermiso permiso = permisoDelSolicitante(idSolicitud, idPermiso);
         permiso.setActivo(false);
         rolPermisoRepository.save(permiso);
+        auditoriaService.registrar("REVOCAR", "Permiso", permiso.getId(),
+                "Acceso al módulo " + permiso.getModulo() + " revocado.");
     }
 
     @Transactional
@@ -578,6 +752,8 @@ public class SolicitudService {
         }
         permiso.setOrigenSolicitud(solicitud.getNumeroSolicitud());
         rolPermisoRepository.save(permiso);
+        auditoriaService.registrar("OTORGAR", "Permiso", permiso.getId(),
+                "Acceso al módulo " + modulo + " otorgado a " + rol.getNombre() + ".");
     }
 
     private RolPermiso permisoDelSolicitante(Long idSolicitud, Long idPermiso) {
@@ -664,6 +840,10 @@ public class SolicitudService {
         solicitud.setComentarioAdmin("Propuesta aceptada por el solicitante.");
         otorgarAccesos(solicitud);
         Solicitud guardada = solicitudRepository.save(solicitud);
+        auditoriaService.registrar("APROBAR", "Solicitud", guardada.getId(),
+                "Propuesta aceptada para la solicitud " + guardada.getNumeroSolicitud() + ".");
+        auditoriaService.registrar("OTORGAR", "Solicitud", guardada.getId(),
+                "Accesos otorgados tras aceptar la propuesta " + guardada.getNumeroSolicitud() + ".");
         notificarDecision(guardada);
         notificacionService.crearParaRol("Administración",
                 "Propuesta aceptada",
@@ -681,6 +861,8 @@ public class SolicitudService {
         solicitud.setFechaAprobacionRechazo(LocalDateTime.now());
         solicitud.setComentarioAdmin("Propuesta rechazada por el solicitante.");
         Solicitud guardada = solicitudRepository.save(solicitud);
+        auditoriaService.registrar("RECHAZAR", "Solicitud", guardada.getId(),
+                "Propuesta rechazada para la solicitud " + guardada.getNumeroSolicitud() + ".");
         notificacionService.crearParaRol("Administración",
                 "Propuesta rechazada",
                 "El solicitante rechazó la propuesta de la solicitud "

@@ -1,17 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
+        <meta charset="UTF-8">
+<script>
+        (function () {
+            try {
+                var guardado = localStorage.getItem('nh-theme');
+                var tema = guardado || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', tema);
+            } catch (e) {}
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel - Nuevo Horizonte</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
 <div th:replace="~{fragments/icons :: icons}"></div>
 <header th:replace="~{fragments/topbar :: topbar}"></header>
 
-<main class="container">
+<main id="contenido" tabindex="-1" class="container">
     <div class="page-head">
         <div>
             <span class="eyebrow">
@@ -20,134 +30,91 @@
             </span>
             <h1>Panel de control</h1>
             <p class="subtitle"
-               th:text="${visionGlobal ? 'Vista global del sistema de solicitudes' : 'Resumen de tus solicitudes'}"></p>
+               th:text="${visionGlobal ? 'Vista global del sistema de solicitudes' : 'Tu actividad y el estado de tus solicitudes'}"></p>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-file"/></svg>
-            </div>
+    <section class="card dash-summary">
+        <div class="dash-summary__head">
             <div>
-                <div class="stat-value" th:text="${totalSolicitudes}">0</div>
-                <div class="stat-label">Total solicitudes</div>
+                <h2 class="card-title">
+                    <svg class="icon"><use href="#i-chart"/></svg>
+                    Resumen de solicitudes
+                </h2>
+                <p class="dash-summary__hint"
+                   th:text="${visionGlobal ? 'Indicadores generales del sistema.' : 'Consulta tus indicadores de un vistazo.'}"></p>
             </div>
-        </div>
-        <div class="stat-card stat-card--warn">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-clock"/></svg>
-            </div>
-            <div>
-                <div class="stat-value" th:text="${pendientes}">0</div>
-                <div class="stat-label">Pendientes</div>
-            </div>
-        </div>
-        <div class="stat-card stat-card--info">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-edit"/></svg>
-            </div>
-            <div>
-                <div class="stat-value" th:text="${borradores}">0</div>
-                <div class="stat-label">Borradores</div>
-            </div>
-        </div>
-        <div class="stat-card stat-card--success">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-check-circle"/></svg>
-            </div>
-            <div>
-                <div class="stat-value" th:text="${aprobadas}">0</div>
-                <div class="stat-label">Aprobadas</div>
-            </div>
-        </div>
-        <div class="stat-card stat-card--danger">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-x"/></svg>
-            </div>
-            <div>
-                <div class="stat-value" th:text="${rechazadas}">0</div>
-                <div class="stat-label">Rechazadas</div>
-            </div>
-        </div>
-        <div sec:authorize="hasRole('Administración')" class="stat-card">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-users"/></svg>
-            </div>
-            <div>
-                <div class="stat-value" th:text="${totalUsuarios}">0</div>
-                <div class="stat-label">Usuarios</div>
-            </div>
-        </div>
-        <div sec:authorize="hasRole('Administración')" class="stat-card">
-            <div class="stat-icon">
-                <svg class="icon"><use href="#i-key"/></svg>
-            </div>
-            <div>
-                <div class="stat-value" th:text="${totalRoles}">0</div>
-                <div class="stat-label">Roles</div>
-            </div>
-        </div>
-    </div>
-
-    <section class="card" style="margin-top:22px;">
-        <h2 class="card-title">
-            <svg class="icon"><use href="#i-grid"/></svg>
-            Accesos rápidos
-        </h2>
-        <div class="quick-grid">
-            <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')"
-               th:href="@{/solicitudes/nueva}" class="quick-card">
-                <svg class="icon"><use href="#i-plus"/></svg>
-                <div>
-                    <strong>Nueva solicitud</strong>
-                    <span>Registrar una solicitud</span>
-                </div>
-            </a>
-            <a th:href="@{/solicitudes}" class="quick-card">
+            <a th:href="@{/solicitudes}" class="btn btn-secondary btn-sm">
                 <svg class="icon"><use href="#i-list"/></svg>
-                <div>
-                    <strong>Ver solicitudes</strong>
-                    <span>Historial y seguimiento</span>
-                </div>
+                Ver solicitudes
             </a>
-            <a sec:authorize="hasAnyRole('Administración','Gerencia')"
-               th:href="@{/disponibles}" class="quick-card">
-                <svg class="icon"><use href="#i-layer"/></svg>
-                <div>
-                    <strong>Disponibles</strong>
-                    <span>Documentos y módulos</span>
+        </div>
+
+        <div class="dash-metrics">
+            <article class="dash-metric">
+                <div class="dash-metric__top">
+                    <span class="dash-metric__icon">
+                        <svg class="icon"><use href="#i-file"/></svg>
+                    </span>
+                    <span class="dash-metric__label">Total</span>
                 </div>
-            </a>
-            <a sec:authorize="hasRole('Gerencia')" th:href="@{/usuarios}" class="quick-card">
-                <svg class="icon"><use href="#i-users"/></svg>
-                <div>
-                    <strong>Usuarios</strong>
-                    <span>Altas, roles y estado</span>
+                <strong class="dash-metric__value" th:text="${totalSolicitudes}">0</strong>
+            </article>
+            <article class="dash-metric dash-metric--warn">
+                <div class="dash-metric__top">
+                    <span class="dash-metric__icon">
+                        <svg class="icon"><use href="#i-clock"/></svg>
+                    </span>
+                    <span class="dash-metric__label">Pendientes</span>
                 </div>
-            </a>
-            <a sec:authorize="hasRole('Gerencia')" th:href="@{/roles}" class="quick-card">
-                <svg class="icon"><use href="#i-key"/></svg>
-                <div>
-                    <strong>Roles y permisos</strong>
-                    <span>Accesos por módulo</span>
+                <strong class="dash-metric__value" th:text="${pendientes}">0</strong>
+            </article>
+            <article class="dash-metric dash-metric--info">
+                <div class="dash-metric__top">
+                    <span class="dash-metric__icon">
+                        <svg class="icon"><use href="#i-edit"/></svg>
+                    </span>
+                    <span class="dash-metric__label">Borradores</span>
                 </div>
-            </a>
-            <a sec:authorize="hasRole('Gerencia')" th:href="@{/documentos}" class="quick-card">
-                <svg class="icon"><use href="#i-file"/></svg>
-                <div>
-                    <strong>Documentos</strong>
-                    <span>Informes que entrega Administración</span>
+                <strong class="dash-metric__value" th:text="${borradores}">0</strong>
+            </article>
+            <article class="dash-metric dash-metric--success">
+                <div class="dash-metric__top">
+                    <span class="dash-metric__icon">
+                        <svg class="icon"><use href="#i-check-circle"/></svg>
+                    </span>
+                    <span class="dash-metric__label">Aprobadas</span>
                 </div>
-            </a>
-            <a sec:authorize="hasAnyRole('Administración','Gerencia')"
-               th:href="@{/reportes}" class="quick-card">
-                <svg class="icon"><use href="#i-chart"/></svg>
-                <div>
-                    <strong>Reportes</strong>
-                    <span>Indicadores de atención</span>
+                <strong class="dash-metric__value" th:text="${aprobadas}">0</strong>
+            </article>
+            <article class="dash-metric dash-metric--danger">
+                <div class="dash-metric__top">
+                    <span class="dash-metric__icon">
+                        <svg class="icon"><use href="#i-x"/></svg>
+                    </span>
+                    <span class="dash-metric__label">Rechazadas</span>
                 </div>
-            </a>
+                <strong class="dash-metric__value" th:text="${rechazadas}">0</strong>
+            </article>
+        </div>
+
+        <div sec:authorize="hasRole('Administración')" class="dash-admin">
+            <span class="dash-admin__label">
+                <svg class="icon"><use href="#i-shield"/></svg>
+                Administración
+            </span>
+            <div class="dash-admin__items">
+                <span class="dash-admin__item">
+                    <svg class="icon"><use href="#i-users"/></svg>
+                    <strong th:text="${totalUsuarios}">0</strong>
+                    Usuarios
+                </span>
+                <span class="dash-admin__item">
+                    <svg class="icon"><use href="#i-key"/></svg>
+                    <strong th:text="${totalRoles}">0</strong>
+                    Roles
+                </span>
+            </div>
         </div>
     </section>
 
