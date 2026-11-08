@@ -191,6 +191,23 @@ public class SolicitudResponseDTO {
                 : "Solicitud de información";
     }
 
+    /**
+     * Etiqueta legible del estado para mostrarla en pantalla (sin guiones ni
+     * mayúsculas técnicas): Pendiente, En revisión, Aprobada, Rechazada, etc.
+     */
+    public String getEstadoLegible() {
+        if (estado == null) {
+            return "—";
+        }
+        return switch (estado) {
+            case BORRADOR -> "Borrador";
+            case PENDIENTE -> "Pendiente";
+            case EN_REVISION -> "En revisión";
+            case APROBADA -> "Aprobada";
+            case RECHAZADA -> "Rechazada";
+        };
+    }
+
     public String getRecursoModuloEtiqueta() {
         return tipoSolicitud == TipoSolicitud.ACCESO
                 ? "Módulos solicitados"

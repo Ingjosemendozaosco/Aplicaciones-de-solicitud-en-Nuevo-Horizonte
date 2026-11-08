@@ -67,37 +67,6 @@
         </span>
     </div>
 
-    <div class="steps form-steps" id="formSteps">
-        <div class="step active">
-            <span class="step-ico"><svg class="icon"><use href="#i-grid"/></svg></span>
-            <span class="step-text">
-                <strong>Tipo</strong>
-                <small>Qué necesitas</small>
-            </span>
-        </div>
-        <div class="step">
-            <span class="step-ico"><svg class="icon"><use href="#i-user"/></svg></span>
-            <span class="step-text">
-                <strong>Solicitante</strong>
-                <small>Tus datos</small>
-            </span>
-        </div>
-        <div class="step">
-            <span class="step-ico"><svg class="icon"><use href="#i-file-text"/></svg></span>
-            <span class="step-text">
-                <strong>Detalle</strong>
-                <small>Información o accesos</small>
-            </span>
-        </div>
-        <div class="step">
-            <span class="step-ico"><svg class="icon"><use href="#i-paperclip"/></svg></span>
-            <span class="step-text">
-                <strong>Adjunto y envío</strong>
-                <small>Revisión final</small>
-            </span>
-        </div>
-    </div>
-
     <div class="alert alert-info" th:if="${solicitudOrigen}" role="status" aria-live="polite">
         <svg class="icon"><use href="#i-copy"/></svg>
         <span>
@@ -107,7 +76,56 @@
         </span>
     </div>
 
-    <div class="form-layout">
+    <div class="form-layout form-layout--steps">
+        <aside class="form-steps-aside" aria-label="Pasos de la solicitud">
+            <div class="form-steps-card">
+                <div class="form-steps-head">
+                    <span class="eyebrow">
+                        <svg class="icon"><use href="#i-grid"/></svg>
+                        Progreso
+                    </span>
+                    <h2>Tu solicitud</h2>
+                    <p>Completa los pasos en orden.</p>
+                </div>
+
+                <div class="steps form-steps" id="formSteps">
+                    <div class="step active">
+                        <span class="step-ico"><svg class="icon"><use href="#i-grid"/></svg></span>
+                        <span class="step-text">
+                            <strong>Tipo</strong>
+                            <small>Qué necesitas</small>
+                        </span>
+                    </div>
+                    <div class="step">
+                        <span class="step-ico"><svg class="icon"><use href="#i-user"/></svg></span>
+                        <span class="step-text">
+                            <strong>Solicitante</strong>
+                            <small>Tus datos</small>
+                        </span>
+                    </div>
+                    <div class="step">
+                        <span class="step-ico"><svg class="icon"><use href="#i-file-text"/></svg></span>
+                        <span class="step-text">
+                            <strong>Detalle</strong>
+                            <small>Información o accesos</small>
+                        </span>
+                    </div>
+                    <div class="step">
+                        <span class="step-ico"><svg class="icon"><use href="#i-paperclip"/></svg></span>
+                        <span class="step-text">
+                            <strong>Adjunto y envío</strong>
+                            <small>Revisión final</small>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-steps-foot">
+                    <svg class="icon icon-xs"><use href="#i-shield-check"/></svg>
+                    <span>Podrás revisar todo antes de enviar.</span>
+                </div>
+            </div>
+        </aside>
+
         <div class="form-main">
             <section class="card card--form card--form-simple">
                 <div th:if="${error}" class="alert alert-error" role="alert" aria-live="assertive">
@@ -222,7 +240,7 @@
                                     <span th:unless="${hayDocumentosPublicados}">Gerencia aún no ha publicado documentos. Selecciona "Otro" y descríbelo.</span>
                                 </p>
                                 <p class="form-hint" th:unless="${sinDocumentos}">
-                                    Solo se muestran los documentos que aún no has recibido.
+                                    Todos los documentos publicados del sistema están listos para solicitar.
                                 </p>
                             </div>
                             <div class="field full" id="campoDetalleInfo">
@@ -771,6 +789,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
     activarPaso(0);
+
+    // Al pulsar un paso del rail se desplaza al bloque correspondiente.
+    pasos.forEach(function (paso, indice) {
+        paso.addEventListener('click', function () {
+            const bloque = bloques[indice];
+            if (bloque) {
+                bloque.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Mantiene resaltado el paso visible mientras se hace scroll.
+    if ('IntersectionObserver' in window) {
+        const observador = new IntersectionObserver(function (entradas) {
+            let visible = null;
+            entradas.forEach(function (entrada) {
+                if (entrada.isIntersecting
+                        && (!visible || entrada.intersectionRatio > visible.intersectionRatio)) {
+                    visible = entrada;
+                }
+            });
+            if (visible) {
+                const indice = Array.prototype.indexOf.call(bloques, visible.target);
+                if (indice >= 0) {
+                    activarPaso(indice);
+                }
+            }
+        }, {
+            rootMargin: '-20% 0px -55% 0px',
+            threshold: [0.15, 0.4, 0.75]
+        });
+        bloques.forEach(function (bloque) {
+            observador.observe(bloque);
+        });
+    }
 
     if (permanente) {
         permanente.addEventListener('change', actualizarVigencia);

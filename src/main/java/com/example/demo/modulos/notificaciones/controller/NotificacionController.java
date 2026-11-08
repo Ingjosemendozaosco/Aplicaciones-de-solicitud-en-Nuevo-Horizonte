@@ -27,8 +27,11 @@ public class NotificacionController {
 
     @GetMapping
     public String listar(Authentication authentication, Model model) {
-        model.addAttribute("notificaciones",
-                notificacionService.listar(authentication.getName()));
+        var notificaciones = notificacionService.listar(authentication.getName());
+        model.addAttribute("notificaciones", notificaciones);
+        model.addAttribute("totalNotificaciones", notificaciones.size());
+        model.addAttribute("noLeidas",
+                notificaciones.stream().filter(n -> !n.isLeida()).count());
         return "notificaciones/lista";
     }
 
@@ -41,11 +44,30 @@ public class NotificacionController {
             return "redirect:/notificaciones";
         }
         notificacionService.marcarLeida(id, authentication.getName());
-        String enlace = notificacion.getEnlace();
-        if (enlace == null || enlace.isBlank() || !enlace.startsWith("/")) {
-            return "redirect:/notificaciones";
+        return "redirect:" + resolverEnlace(notificacion);
+    }
+
+    /**
+     * Devuelve una ruta válida a la que llevar al usuario. Si la notificación no
+     * trae enlace (o es inválido) se deduce un destino coherente según el tipo
+     * de aviso para no devolver al usuario a la misma lista.
+     */
+    private String resolverEnlace(Notificacion notificacion) {
+        String titulo = notificacion.getTitulo() == null
+                ? ""
+                : notificacion.getTitulo().toLowerCase();
+        if (titulo.contains("document")) {
+            return "/disponibles";
         }
-        return "redirect:" + enlace;
+        if (titulo.contains("rol") || titulo.contains("acceso") || titulo.contains("vencid")) {
+            return "/mis-accesos";
+        }
+        String enlace = notificacion.getEnlace();
+        if (enlace != null && enlace.startsWith("/") && !enlace.startsWith("//")
+                && !enlace.startsWith("/notificaciones")) {
+            return enlace;
+        }
+        return "/solicitudes";
     }
 
     @PostMapping("/leer-todas")

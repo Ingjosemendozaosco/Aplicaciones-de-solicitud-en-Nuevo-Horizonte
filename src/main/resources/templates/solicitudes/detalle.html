@@ -67,14 +67,8 @@
                     <svg class="icon icon-xs" th:if="${solicitud.estado.toString() == 'RECHAZADA'}">
                         <use href="#i-x"/>
                     </svg>
-                    <span th:text="${solicitud.estado}"></span>
+                    <span th:text="${solicitud.estadoLegible}">Pendiente</span>
                 </span>
-                <a th:if="${solicitud.estado.toString() == 'APROBADA'}"
-                   th:href="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/constancia'}"
-                   target="_blank" class="btn btn-secondary btn-sm">
-                    <svg class="icon icon-xs"><use href="#i-file"/></svg>
-                    Constancia
-                </a>
                 <a th:if="${puedeDuplicar}"
                    th:href="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/duplicar'}"
                    class="btn btn-secondary btn-sm">
@@ -95,7 +89,7 @@
             </span>
             <span class="sol-meta">
                 <span class="sol-meta__label">Fecha</span>
-                <strong th:text="${solicitud.fechaSolicitud}">Fecha</strong>
+                <strong th:text="${solicitud.fechaSolicitud != null ? #temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy') : '—'}">Fecha</strong>
             </span>
             <span class="sol-meta">
                 <span class="sol-meta__label">Responsable</span>
@@ -133,8 +127,16 @@
                 </header>
 
                 <div class="sol-person">
-                    <span class="sol-person__avatar"
-                          th:text="${#strings.substring(solicitud.nombreSolicitante, 0, 1)}">J</span>
+                    <div class="sol-person__avatar-wrapper">
+                        <svg class="icon icon--area"
+                             th:if="${solicitud.areaSolicitante == 'Area de Producto'}"><use href="#i-layer"/></svg>
+                             th:if="${solicitud.areaSolicitante == 'Area de Ventas'}"><use href="#i-shield"/></svg>
+                             th:if="${solicitud.areaSolicitante == 'Gerencia'}"><use href="#i-building"/></svg>
+                             th:if="${solicitud.areaSolicitante == 'Administración'}"><use href="#i-user"/></svg>
+                        <span class="fallback-letter"
+                              th:if="#strings.isEmpty(solicitud.areaSolicitante)"
+                              th:text="${solicitud.nombreSolicitante?.substring(0, 1).toUpperCase()}">A</span>
+                    </div>
                     <div class="sol-person__info">
                         <strong class="sol-person__name" th:text="${solicitud.nombreSolicitante}">Nombre</strong>
                         <span class="sol-person__role" th:text="${solicitud.areaSolicitante}">Área</span>
@@ -157,7 +159,7 @@
                 </div>
             </section>
 
-            <section class="card sol-block">
+            <section class="card sol-block sol-data">
                 <header class="sol-block__head">
                     <span class="sol-block__icon">
                         <svg class="icon"><use href="#i-list"/></svg>
@@ -168,63 +170,89 @@
                     </div>
                 </header>
 
-                <div class="sol-facts">
-                    <div class="fact fact--strong">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-layer"/></svg>
-                            <span th:text="${solicitud.recursoModuloEtiqueta}">Recurso</span>
-                        </span>
-                        <strong class="fact__value" th:text="${solicitud.recursoModulo}">Recurso</strong>
+                <div class="sol-data__hero">
+                    <span class="sol-data__hero-icon">
+                        <svg class="icon"><use href="#i-layer"/></svg>
+                    </span>
+                    <div class="sol-data__hero-body">
+                        <span class="sol-data__hero-label"
+                              th:text="${solicitud.recursoModuloEtiqueta}">Recurso solicitado</span>
+                        <strong class="sol-data__hero-value"
+                                th:text="${solicitud.recursoModulo}">Recurso</strong>
                     </div>
-                    <div class="fact">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-check-circle"/></svg>
-                            Tipo de solicitud
+                    <span class="badge badge--lg"
+                          th:classappend="${#strings.toLowerCase(solicitud.estado.toString())}"
+                          th:text="${solicitud.estadoLegible}">Estado</span>
+                </div>
+
+                <div class="sol-data__grid">
+                    <div class="sol-data__item">
+                        <span class="sol-data__ico">
+                            <svg class="icon"><use href="#i-check-circle"/></svg>
                         </span>
-                        <strong class="fact__value" th:text="${solicitud.tipoSolicitudLegible}">Tipo</strong>
+                        <div class="sol-data__body">
+                            <span class="sol-data__label">Tipo de solicitud</span>
+                            <strong class="sol-data__value" th:text="${solicitud.tipoSolicitudLegible}">Tipo</strong>
+                        </div>
                     </div>
-                    <div class="fact">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-building"/></svg>
-                            Área solicitante
+                    <div class="sol-data__item">
+                        <span class="sol-data__ico">
+                            <svg class="icon"><use href="#i-building"/></svg>
                         </span>
-                        <strong class="fact__value" th:text="${solicitud.areaSolicitante}">Área</strong>
+                        <div class="sol-data__body">
+                            <span class="sol-data__label">Área solicitante</span>
+                            <strong class="sol-data__value" th:text="${solicitud.areaSolicitante}">Área</strong>
+                        </div>
                     </div>
-                    <div class="fact">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-shield"/></svg>
-                            Responsable de aprobación
+                    <div class="sol-data__item">
+                        <span class="sol-data__ico">
+                            <svg class="icon"><use href="#i-shield"/></svg>
                         </span>
-                        <strong class="fact__value" th:text="${solicitud.responsableAprobacion}">Responsable</strong>
+                        <div class="sol-data__body">
+                            <span class="sol-data__label">Responsable de aprobación</span>
+                            <strong class="sol-data__value" th:text="${solicitud.responsableAprobacion}">Responsable</strong>
+                        </div>
                     </div>
-                    <div class="fact">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-calendar"/></svg>
-                            Fecha de solicitud
+                    <div class="sol-data__item">
+                        <span class="sol-data__ico">
+                            <svg class="icon"><use href="#i-calendar"/></svg>
                         </span>
-                        <strong class="fact__value" th:text="${solicitud.fechaSolicitud}">Fecha</strong>
+                        <div class="sol-data__body">
+                            <span class="sol-data__label">Fecha de solicitud</span>
+                            <strong class="sol-data__value"
+                                    th:text="${solicitud.fechaSolicitud != null ? #temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy') : '—'}">Fecha</strong>
+                        </div>
                     </div>
-                    <div class="fact">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-clock"/></svg>
-                            Fecha de aprobación o rechazo
+                    <div class="sol-data__item sol-data__item--wide">
+                        <span class="sol-data__ico sol-data__ico--warn">
+                            <svg class="icon"><use href="#i-clock"/></svg>
                         </span>
-                        <strong class="fact__value"
-                                th:text="${solicitud.fechaAprobacionRechazo != null ? solicitud.fechaAprobacionRechazo : 'Pendiente'}">Pendiente</strong>
+                        <div class="sol-data__body">
+                            <span class="sol-data__label">Fecha de la decisión</span>
+                            <strong class="sol-data__value"
+                                    th:classappend="${solicitud.fechaAprobacionRechazo == null ? 'is-muted' : ''}"
+                                    th:text="${solicitud.fechaAprobacionRechazo != null ? #temporals.format(solicitud.fechaAprobacionRechazo, 'dd/MM/yyyy · HH:mm') : 'Pendiente'}">Pendiente</strong>
+                        </div>
                     </div>
-                    <div class="fact" th:if="${solicitud.cargoSolicitante != null and !solicitud.cargoSolicitante.isBlank()}">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-shield"/></svg>
+                </div>
+
+                <div class="sol-data__footer"
+                     th:if="${(solicitud.cargoSolicitante != null and !solicitud.cargoSolicitante.isBlank())
+                             or solicitud.usernameSolicitante != null}">
+                    <div class="sol-data__mini"
+                         th:if="${solicitud.cargoSolicitante != null and !solicitud.cargoSolicitante.isBlank()}">
+                        <span class="sol-data__mini-label">
+                            <svg class="icon"><use href="#i-shield"/></svg>
                             Cargo formal
                         </span>
-                        <strong class="fact__value" th:text="${solicitud.cargoSolicitante}">Cargo</strong>
+                        <strong th:text="${solicitud.cargoSolicitante}">Cargo</strong>
                     </div>
-                    <div class="fact fact--minor" th:if="${solicitud.usernameSolicitante != null}">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-user"/></svg>
+                    <div class="sol-data__mini" th:if="${solicitud.usernameSolicitante != null}">
+                        <span class="sol-data__mini-label">
+                            <svg class="icon"><use href="#i-user"/></svg>
                             Usuario
                         </span>
-                        <strong class="fact__value" th:text="${solicitud.usernameSolicitante}">Usuario</strong>
+                        <strong th:text="|@${solicitud.usernameSolicitante}|">@usuario</strong>
                     </div>
                 </div>
             </section>
@@ -260,9 +288,9 @@
                         <strong class="fact__value" th:if="${solicitud.permanente}">Permanente</strong>
                         <strong class="fact__value" th:unless="${solicitud.permanente}">
                             <span th:if="${solicitud.fechaInicioAcceso != null}"
-                                  th:text="'Inicio: ' + ${solicitud.fechaInicioAcceso}"></span>
+                                  th:text="'Inicio: ' + ${#temporals.format(solicitud.fechaInicioAcceso, 'dd/MM/yyyy')}"></span>
                             <span th:if="${solicitud.fechaFinAcceso != null}"
-                                  th:text="' · Fin: ' + ${solicitud.fechaFinAcceso}"></span>
+                                  th:text="' · Fin: ' + ${#temporals.format(solicitud.fechaFinAcceso, 'dd/MM/yyyy')}"></span>
                             <span th:if="${solicitud.fechaFinAcceso == null}" class="muted">
                                 · Fin: 30 días después del inicio (automático)
                             </span>
@@ -396,68 +424,6 @@
                     </a>
                 </div>
             </section>
-
-            <section class="card sol-block">
-                <header class="sol-block__head">
-                    <span class="sol-block__icon">
-                        <svg class="icon"><use href="#i-history"/></svg>
-                    </span>
-                    <div>
-                        <h2 class="sol-block__title">Seguimiento</h2>
-                        <p class="sol-block__sub">Estado del flujo de la solicitud.</p>
-                    </div>
-                </header>
-
-                <div class="timeline"
-                     th:with="enRevision=${solicitud.estado.toString() == 'EN_REVISION'},
-                              decidida=${solicitud.estado.toString() == 'APROBADA' || solicitud.estado.toString() == 'RECHAZADA'},
-                              aprobada=${solicitud.estado.toString() == 'APROBADA'}">
-                    <div class="tl-item done">
-                        <span class="tl-dot">
-                            <svg class="icon"><use href="#i-check"/></svg>
-                        </span>
-                        <div class="tl-body">
-                            <strong>Solicitud creada</strong>
-                            <span th:text="|${solicitud.fechaSolicitud} · ${solicitud.nombreSolicitante}|"></span>
-                        </div>
-                    </div>
-                    <div class="tl-item" th:classappend="${(enRevision || decidida) ? 'done' : 'current'}">
-                        <span class="tl-dot">
-                            <svg class="icon"><use href="#i-clock"/></svg>
-                        </span>
-                        <div class="tl-body">
-                            <strong>Revisión</strong>
-                            <span th:if="${enRevision}">En revisión por administración.</span>
-                            <span th:if="${!enRevision && !decidida}">En espera de revisión por administración.</span>
-                            <span th:if="${!enRevision && decidida}">Revisada por administración.</span>
-                        </div>
-                    </div>
-                    <div class="tl-item" th:classappend="${!decidida ? 'pending' : (aprobada ? 'done' : 'rejected')}">
-                        <span class="tl-dot">
-                            <svg class="icon" th:if="${aprobada}"><use href="#i-check"/></svg>
-                            <svg class="icon" th:if="${!aprobada}"><use href="#i-clock"/></svg>
-                        </span>
-                        <div class="tl-body">
-                            <strong>Decisión</strong>
-                            <span th:if="${!decidida}">Pendiente de decisión.</span>
-                            <span th:if="${decidida && solicitud.fechaAprobacionRechazo != null}"
-                                  th:text="|${solicitud.estado} · ${#strings.substring(solicitud.fechaAprobacionRechazo.toString(), 0, 10)}|"></span>
-                            <span th:if="${decidida && solicitud.fechaAprobacionRechazo == null}"
-                                  th:text="${solicitud.estado}"></span>
-                            <span th:if="${decidida && solicitud.comentarioAdmin != null && !solicitud.comentarioAdmin.isBlank()}"
-                                  th:text="|Observación: ${solicitud.comentarioAdmin}|"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sol-comment" th:if="${solicitud.comentarioAdmin != null and !solicitud.comentarioAdmin.isBlank()}">
-                    <span class="fact__label">
-                        <svg class="icon icon-xs"><use href="#i-message-square"/></svg>
-                        Comentario del administrador
-                    </span>
-                    <p th:text="${solicitud.comentarioAdmin}">Comentario</p>
-                </div>
-            </section>
         </div>
 
         <!-- Barra lateral: decisión y resumen -->
@@ -538,7 +504,7 @@
                         <dt>Estado</dt>
                         <dd>
                             <span class="badge" th:classappend="${#strings.toLowerCase(solicitud.estado.toString())}"
-                                  th:text="${solicitud.estado}">PENDIENTE</span>
+                                  th:text="${solicitud.estadoLegible}">Pendiente</span>
                         </dd>
                     </div>
                     <div>
@@ -551,13 +517,98 @@
                     </div>
                     <div>
                         <dt>Creada</dt>
-                        <dd th:text="${solicitud.fechaSolicitud}">Fecha</dd>
+                        <dd th:text="${solicitud.fechaSolicitud != null ? #temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy') : '—'}">Fecha</dd>
                     </div>
                     <div>
                         <dt>Decisión</dt>
-                        <dd th:text="${solicitud.fechaAprobacionRechazo != null ? solicitud.fechaAprobacionRechazo : 'Pendiente'}">Pendiente</dd>
+                        <dd th:text="${solicitud.fechaAprobacionRechazo != null ? #temporals.format(solicitud.fechaAprobacionRechazo, 'dd/MM/yyyy · HH:mm') : 'Pendiente'}">Pendiente</dd>
                     </div>
                 </dl>
+            </section>
+
+            <section class="sol-sidecard sol-track-card"
+                     th:with="enRevision=${solicitud.estado.toString() == 'EN_REVISION'},
+                              decidida=${solicitud.estado.toString() == 'APROBADA' || solicitud.estado.toString() == 'RECHAZADA'},
+                              aprobada=${solicitud.estado.toString() == 'APROBADA'}">
+                <h2 class="sol-sidecard__title">
+                    <svg class="icon"><use href="#i-activity"/></svg>
+                    Seguimiento
+                </h2>
+                <p class="sol-track__sub">Así avanza la solicitud, paso a paso.</p>
+
+                <div class="sol-track"
+                     th:classappend="${aprobada ? 'sol-track--ok' : (decidida ? 'sol-track--bad' : (enRevision ? 'sol-track--progress' : 'sol-track--pending'))}">
+                    <div class="sol-track__rail" aria-hidden="true">
+                        <span class="sol-track__fill"
+                              th:classappend="${aprobada ? 'sol-track__fill--ok' : (decidida ? 'sol-track__fill--bad' : (enRevision ? 'sol-track__fill--progress' : 'sol-track__fill--pending'))}"></span>
+                    </div>
+
+                    <ol class="sol-track__steps">
+                        <li class="sol-track__step is-done">
+                            <span class="sol-track__dot">
+                                <svg class="icon"><use href="#i-check"/></svg>
+                            </span>
+                            <div class="sol-track__body">
+                                <span class="sol-track__label">Paso 1</span>
+                                <strong>Solicitud creada</strong>
+                                <small>
+                                    <svg class="icon"><use href="#i-calendar"/></svg>
+                                    <span th:text="${solicitud.fechaSolicitud != null ? #temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy') : '—'}">06/11/2026</span>
+                                    <span th:if="${solicitud.nombreSolicitante != null}" class="sol-track__sep">·</span>
+                                    <span th:if="${solicitud.nombreSolicitante != null}"
+                                          th:text="${solicitud.nombreSolicitante}">Solicitante</span>
+                                </small>
+                            </div>
+                        </li>
+
+                        <li class="sol-track__step"
+                            th:classappend="${(enRevision || decidida) ? 'is-done' : 'is-current'}">
+                            <span class="sol-track__dot">
+                                <svg class="icon"><use href="#i-clock"/></svg>
+                            </span>
+                            <div class="sol-track__body">
+                                <span class="sol-track__label">Paso 2</span>
+                                <strong>Revisión</strong>
+                                <small th:if="${enRevision}">En revisión por administración.</small>
+                                <small th:if="${!enRevision && !decidida}">En espera de revisión.</small>
+                                <small th:if="${!enRevision && decidida}">Revisada por administración.</small>
+                            </div>
+                        </li>
+
+                        <li class="sol-track__step"
+                            th:classappend="${!decidida ? 'is-pending' : (aprobada ? 'is-done' : 'is-rejected')}">
+                            <span class="sol-track__dot">
+                                <svg class="icon" th:if="${aprobada}"><use href="#i-check"/></svg>
+                                <svg class="icon" th:if="${decidida && !aprobada}"><use href="#i-x"/></svg>
+                                <svg class="icon" th:if="${!decidida}"><use href="#i-clock"/></svg>
+                            </span>
+                            <div class="sol-track__body">
+                                <span class="sol-track__label">Paso 3</span>
+                                <strong>Decisión</strong>
+                                <small th:if="${!decidida}">Pendiente de decisión.</small>
+                                <small th:if="${decidida}">
+                                    <svg class="icon"><use href="#i-calendar"/></svg>
+                                    <span th:if="${solicitud.fechaAprobacionRechazo != null}"
+                                          th:text="${#temporals.format(solicitud.fechaAprobacionRechazo, 'dd/MM/yyyy · HH:mm')}">06/11/2026 · 22:05</span>
+                                    <span th:if="${solicitud.fechaAprobacionRechazo == null}">Sin fecha</span>
+                                </small>
+                                <span class="sol-track__result"
+                                      th:if="${decidida}"
+                                      th:classappend="${aprobada ? 'sol-track__result--ok' : 'sol-track__result--bad'}"
+                                      th:text="${aprobada ? 'Aprobada' : 'Rechazada'}">Aprobada</span>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="sol-comment sol-comment--compact"
+                     th:if="${solicitud.comentarioAdmin != null and !solicitud.comentarioAdmin.isBlank()}">
+                    <span class="fact__label">
+                        <svg class="icon icon-xs"><use href="#i-message-square"/></svg>
+                        Comentario del administrador
+                    </span>
+                    <p th:text="${solicitud.comentarioAdmin}">Comentario</p>
+                </div>
             </section>
         </aside>
     </div>

@@ -86,7 +86,7 @@ public class DocumentoService {
                 "Nuevo documento disponible",
                 "Gerencia publicó el documento \"" + guardado.getNombre()
                         + "\" para las solicitudes de información.",
-                "/solicitudes");
+                "/disponibles");
         return guardado;
     }
 

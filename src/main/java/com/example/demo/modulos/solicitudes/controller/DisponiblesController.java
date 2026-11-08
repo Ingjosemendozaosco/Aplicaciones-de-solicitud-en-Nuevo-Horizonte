@@ -4,8 +4,10 @@ import com.example.demo.modulos.documentos.entity.Documento;
 import com.example.demo.modulos.documentos.service.DocumentoService;
 import com.example.demo.modulos.solicitudes.service.SolicitudService;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Controller
 @RequestMapping("/disponibles")
@@ -29,11 +32,15 @@ public class DisponiblesController {
     }
 
     @GetMapping
-    public String ver(Model model) {
-        var documentos = documentoService.listarTodos();
+    public String ver(Model model, Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : null;
+        // Catálogo completo de documentos activos; cada tarjeta indica si está
+        // desbloqueada (solicitud aprobada) o bloqueada (pendiente de solicitar).
+        List<Documento> documentos = documentoService.listar();
         var modulos = solicitudService.modulosDisponibles();
         var areas = solicitudService.areasDisponibles(modulos);
         model.addAttribute("documentos", documentos);
+        model.addAttribute("documentosDesbloqueados", solicitudService.documentosDesbloqueados(username));
         model.addAttribute("documentosActivos", documentos.stream()
                 .filter(Documento::isActivo).count());
         model.addAttribute("modulos", modulos);
@@ -43,7 +50,11 @@ public class DisponiblesController {
     }
 
     @GetMapping("/{id}/archivo")
-    public ResponseEntity<byte[]> archivo(@PathVariable Long id) {
+    public ResponseEntity<byte[]> archivo(@PathVariable Long id, Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : null;
+        if (!solicitudService.tieneAccesoDocumento(username, id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         Documento documento = documentoService.buscar(id);
         String nombre = documento.getNombreArchivo() != null
                 ? documento.getNombreArchivo() : "documento";

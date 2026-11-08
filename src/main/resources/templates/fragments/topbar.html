@@ -4,10 +4,8 @@
 <body>
 <header th:fragment="topbar" class="topbar">
     <a th:href="@{/dashboard}" class="brand">
-        <span class="logo-badge">
-            <svg class="icon"><use href="#i-compass"/></svg>
-        </span>
-        Nuevo Horizonte
+        <img th:src="@{/img/logo.png}" alt="Logo Nuevo Horizonte" class="brand-logo"/>
+        <span class="brand-text">Nuevo Horizonte</span>
     </a>
 
     <nav class="topnav">

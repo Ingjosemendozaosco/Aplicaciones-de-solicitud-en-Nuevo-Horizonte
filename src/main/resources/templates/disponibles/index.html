@@ -65,9 +65,12 @@
 
         <div class="doc-grid" th:if="${!#lists.isEmpty(documentos)}">
             <article class="doc-card" th:each="d : ${documentos}"
-                     th:classappend="${!d.activo} ? 'doc-card--inactivo' : ''">
+                     th:with="desbloqueado=${documentosDesbloqueados.contains(d.id)}"
+                     th:classappend="${(!d.activo ? ' doc-card--inactivo' : '') + (!desbloqueado ? ' doc-card--locked' : '')}">
 
-                <a class="doc-card__preview"
+                <!-- Documento desbloqueado: vista previa real -->
+                <a th:if="${desbloqueado}"
+                   class="doc-card__preview"
                    th:href="@{'/disponibles/' + ${d.id} + '/archivo'}"
                    target="_blank" rel="noopener"
                    th:title="|Abrir ${d.nombreArchivo}|">
@@ -90,6 +93,15 @@
                     </span>
                 </a>
 
+                <!-- Documento bloqueado: sin acceso al archivo -->
+                <div th:unless="${desbloqueado}" class="doc-card__preview doc-card__preview--locked">
+                    <span class="doc-card__lock">
+                        <svg class="icon"><use href="#i-lock"/></svg>
+                        <strong>Documento bloqueado</strong>
+                        <small>Solicita acceso para verlo</small>
+                    </span>
+                </div>
+
                 <div class="doc-card__body">
                     <div class="doc-card__tags">
                         <span class="catalogo-doc__cat"
@@ -97,6 +109,8 @@
                         <span class="badge"
                               th:classappend="${d.activo} ? 'aprobada' : 'rechazada'"
                               th:text="${d.activo ? 'Activo' : 'Inactivo'}"></span>
+                        <span class="badge" th:if="${!desbloqueado}"
+                              th:classappend="'rechazada'" th:text="'Bloqueado'"></span>
                     </div>
                     <h3 th:text="${d.nombre}">Documento</h3>
                     <p th:if="${d.descripcion != null}" th:text="${d.descripcion}"></p>
@@ -104,11 +118,16 @@
                         <span th:if="${d.subidoPor != null}" th:text="|Publicado por ${d.subidoPor}|"></span>
                         <span th:text="${d.fechaSubida != null ? #strings.substring(d.fechaSubida.toString(), 0, 10) : '—'}"></span>
                     </div>
-                    <a class="doc-card__link"
+                    <a class="doc-card__link" th:if="${desbloqueado}"
                        th:href="@{'/disponibles/' + ${d.id} + '/archivo'}"
                        target="_blank" rel="noopener">
                         <svg class="icon icon-xs"><use href="#i-file"/></svg>
                         Ver archivo
+                    </a>
+                    <a class="doc-card__link doc-card__link--locked" th:unless="${desbloqueado}"
+                       th:href="@{/solicitudes/nueva}">
+                        <svg class="icon icon-xs"><use href="#i-lock"/></svg>
+                        Solicitar acceso
                     </a>
                 </div>
             </article>
