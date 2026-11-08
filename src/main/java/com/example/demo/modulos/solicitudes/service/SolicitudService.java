@@ -39,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -98,6 +99,7 @@ public class SolicitudService {
     public SolicitudResponseDTO crear(SolicitudRequestDTO dto, String username) throws IOException {
         aplicarDefaults(dto, username);
         validarPorTipo(dto);
+        validarEvidenciaObligatoria(dto.getArchivo());
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + username));
         String numero = "SOL-" + Year.now().getValue() + "-"
@@ -121,6 +123,13 @@ public class SolicitudService {
                                 ? "acceso a módulos." : "información."),
                 "/solicitudes/" + guardada.getId());
         return solicitudMapper.toResponse(guardada);
+    }
+
+    private void validarEvidenciaObligatoria(MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Adjunta evidencia que respalde la solicitud antes de enviarla.");
+        }
     }
 
     @Transactional
@@ -355,6 +364,7 @@ public class SolicitudService {
                 && solicitud.getTipoSolicitud() == TipoSolicitud.INFORMACION) {
             if (idDocumento == null) {
                 solicitud.setNombreInforme(null);
+                solicitud.setIdDocumentoInforme(null);
                 solicitud.setTipoInforme(null);
                 solicitud.setContenidoInforme(null);
                 if (comentario == null || comentario.isBlank()) {
@@ -365,6 +375,7 @@ public class SolicitudService {
                         .filter(Documento::isActivo)
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "El documento seleccionado no está disponible."));
+                solicitud.setIdDocumentoInforme(documento.getId());
                 solicitud.setNombreInforme(documento.getNombreArchivo() != null
                         ? documento.getNombreArchivo() : documento.getNombre());
                 solicitud.setTipoInforme(documento.getTipoArchivo() != null
@@ -618,8 +629,7 @@ public class SolicitudService {
     /**
      * Documentos activos que el usuario aún NO tiene desbloqueados (no han sido
      * aprobados en una solicitud de INFORMACIÓN). Son los que puede solicitar
-     * desde el formulario. Gerencia y Administración ya ven todo y no necesitan
-     * solicitarlos.
+     * desde el formulario. Gerencia y Administración no necesitan solicitarlos.
      */
     @Transactional(readOnly = true)
     public List<Documento> documentosSinRecibir(String username) {
@@ -631,21 +641,11 @@ public class SolicitudService {
         if (esGestorDocumentos(usuario)) {
             return List.of();
         }
-        Set<String> recibidos = new HashSet<>();
-        for (Solicitud solicitud : solicitudRepository.findByUsuarioUsername(username)) {
-            if (solicitud.getEstado() != EstadoSolicitud.APROBADA
-                    || solicitud.getTipoSolicitud() != TipoSolicitud.INFORMACION) {
-                continue;
-            }
-            if (solicitud.getNombreInforme() != null && !solicitud.getNombreInforme().isBlank()) {
-                recibidos.add(normalizar(solicitud.getNombreInforme()));
-            }
-        }
+        Set<Long> recibidos = documentosAprobados(
+                activos, solicitudRepository.findByUsuarioUsername(username));
         List<Documento> pendientes = new ArrayList<>();
         for (Documento documento : activos) {
-            boolean yaRecibido = recibidos.contains(normalizar(documento.getNombreArchivo()))
-                    || recibidos.contains(normalizar(documento.getNombre()));
-            if (!yaRecibido) {
+            if (!recibidos.contains(documento.getId())) {
                 pendientes.add(documento);
             }
         }
@@ -674,20 +674,55 @@ public class SolicitudService {
             }
             return desbloqueados;
         }
-        Set<String> recibidos = new HashSet<>();
-        for (Solicitud solicitud : solicitudRepository.findByUsuarioUsername(username)) {
+        desbloqueados.addAll(documentosAprobados(
+                activos, solicitudRepository.findByUsuarioUsername(username)));
+        return desbloqueados;
+    }
+
+    private Set<Long> documentosAprobados(List<Documento> activos, List<Solicitud> solicitudes) {
+        Set<Long> idsActivos = new HashSet<>();
+        for (Documento documento : activos) {
+            idsActivos.add(documento.getId());
+        }
+        Set<Long> desbloqueados = new HashSet<>();
+        for (Solicitud solicitud : solicitudes) {
             if (solicitud.getEstado() != EstadoSolicitud.APROBADA
                     || solicitud.getTipoSolicitud() != TipoSolicitud.INFORMACION) {
                 continue;
             }
-            if (solicitud.getNombreInforme() != null && !solicitud.getNombreInforme().isBlank()) {
-                recibidos.add(normalizar(solicitud.getNombreInforme()));
+            Long idDocumento = solicitud.getIdDocumentoInforme();
+            if (idDocumento != null) {
+                if (idsActivos.contains(idDocumento)) {
+                    desbloqueados.add(idDocumento);
+                }
+                continue;
             }
-        }
-        for (Documento doc : activos) {
-            if (recibidos.contains(normalizar(doc.getNombreArchivo()))
-                    || recibidos.contains(normalizar(doc.getNombre()))) {
-                desbloqueados.add(doc.getId());
+            String nombreInforme = solicitud.getNombreInforme();
+            byte[] contenidoInforme = solicitud.getContenidoInforme();
+            if (contenidoInforme != null) {
+                List<Documento> coincidenciasPorContenido = activos.stream()
+                        .filter(doc -> Arrays.equals(contenidoInforme, doc.getContenido()))
+                        .toList();
+                if (coincidenciasPorContenido.size() == 1) {
+                    desbloqueados.add(coincidenciasPorContenido.get(0).getId());
+                    continue;
+                }
+            }
+            if (nombreInforme == null || nombreInforme.isBlank()) {
+                continue;
+            }
+
+            List<Documento> coincidencias = activos.stream()
+                    .filter(doc -> doc.getNombreArchivo() != null
+                            && normalizar(nombreInforme).equals(normalizar(doc.getNombreArchivo())))
+                    .toList();
+            if (coincidencias.isEmpty()) {
+                coincidencias = activos.stream()
+                        .filter(doc -> normalizar(nombreInforme).equals(normalizar(doc.getNombre())))
+                        .toList();
+            }
+            if (coincidencias.size() == 1) {
+                desbloqueados.add(coincidencias.get(0).getId());
             }
         }
         return desbloqueados;
@@ -698,24 +733,15 @@ public class SolicitudService {
         return idDocumento != null && documentosDesbloqueados(username).contains(idDocumento);
     }
 
-    /**
-     * Gerencia y Administración administran los documentos: ven todos sin
-     * necesidad de una solicitud aprobada.
-     */
     private boolean esGestorDocumentos(Usuario usuario) {
         if (usuario == null) {
             return false;
         }
-        for (Rol rol : usuario.rolesVigentes()) {
-            if (rol == null || !rol.isActivo()) {
-                continue;
-            }
-            String nombre = rol.getNombre();
-            if (nombre != null && (nombre.contains("Gerencia") || nombre.contains("Administra"))) {
-                return true;
-            }
-        }
-        return false;
+        return usuario.rolesVigentes().stream()
+                .filter(rol -> rol != null && rol.isActivo())
+                .map(Rol::getNombre)
+                .anyMatch(nombre -> nombre != null
+                        && (nombre.contains("Gerencia") || nombre.contains("Administración")));
     }
 
     private static String normalizar(String valor) {

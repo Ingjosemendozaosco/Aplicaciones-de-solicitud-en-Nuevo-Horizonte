@@ -219,7 +219,16 @@
                     </td>
                     <td>
                         <div class="cell-user">
+                            <span class="avatar-initial area-avatar"
+                                  th:if="${s.areaSolicitante != null and !#strings.isEmpty(s.areaSolicitante)}"
+                                  aria-hidden="true">
+                                <svg class="icon" th:if="${s.areaSolicitante.contains('Area de Producto')}"><use href="#i-layer"/></svg>
+                                <svg class="icon" th:if="${s.areaSolicitante.contains('Area de Ventas')}"><use href="#i-trending-up"/></svg>
+                                <svg class="icon" th:if="${s.areaSolicitante.contains('Gerencia')}"><use href="#i-building"/></svg>
+                                <svg class="icon" th:if="${s.areaSolicitante.contains('Administración')}"><use href="#i-shield-check"/></svg>
+                            </span>
                             <span class="avatar-initial"
+                                  th:if="${s.areaSolicitante == null or #strings.isEmpty(s.areaSolicitante)}"
                                   th:text="${#strings.isEmpty(s.nombreSolicitante) ? '?' : #strings.substring(s.nombreSolicitante, 0, 1)}"></span>
                             <div class="cell-user-text">
                                 <strong th:text="${s.nombreSolicitante}"></strong>

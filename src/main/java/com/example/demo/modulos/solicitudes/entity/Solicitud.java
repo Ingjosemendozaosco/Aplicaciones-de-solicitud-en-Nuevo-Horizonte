@@ -122,6 +122,9 @@ public class Solicitud {
     @Column(name = "nombre_informe")
     private String nombreInforme;
 
+    @Column(name = "id_documento_informe")
+    private Long idDocumentoInforme;
+
     @Column(name = "tipo_informe")
     private String tipoInforme;
 
@@ -363,6 +366,14 @@ public class Solicitud {
 
     public void setNombreInforme(String nombreInforme) {
         this.nombreInforme = nombreInforme;
+    }
+
+    public Long getIdDocumentoInforme() {
+        return idDocumentoInforme;
+    }
+
+    public void setIdDocumentoInforme(Long idDocumentoInforme) {
+        this.idDocumentoInforme = idDocumentoInforme;
     }
 
     public String getTipoInforme() {

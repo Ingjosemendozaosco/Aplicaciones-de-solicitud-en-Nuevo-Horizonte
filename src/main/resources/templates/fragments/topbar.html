@@ -17,7 +17,7 @@
             <svg class="icon"><use href="#i-list"/></svg>
             Solicitudes
         </a>
-        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas')"
+        <a sec:authorize="hasAnyRole('Area de Producto','Area de Ventas','Administración')"
            th:href="@{/solicitudes/nueva}" class="nav-btn nav-btn--accent">
             <svg class="icon"><use href="#i-plus"/></svg>
             Nueva

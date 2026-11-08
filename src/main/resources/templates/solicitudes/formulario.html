@@ -77,19 +77,34 @@
     </div>
 
     <div class="form-layout form-layout--steps">
-        <aside class="form-steps-aside" aria-label="Pasos de la solicitud">
+        <aside class="form-steps-aside" aria-label="Progreso de la solicitud">
             <div class="form-steps-card">
                 <div class="form-steps-head">
                     <span class="eyebrow">
-                        <svg class="icon"><use href="#i-grid"/></svg>
-                        Progreso
+                        <svg class="icon"><use href="#i-sparkles"/></svg>
+                        Tu avance
                     </span>
-                    <h2>Tu solicitud</h2>
-                    <p>Completa los pasos en orden.</p>
+                    <h2>Progreso de tu solicitud</h2>
+                    <p id="formStepsIntro">Completa cada etapa. Puedes revisar tus datos antes de enviarlos.</p>
+                </div>
+
+                <div class="form-progress">
+                    <div class="form-progress__meta">
+                        <span id="formProgressLabel">Paso 1 de 4</span>
+                        <strong id="formProgressName">Tipo</strong>
+                    </div>
+                    <div class="form-progress__track" id="formProgressTrack" role="progressbar"
+                         aria-label="Etapas completadas" aria-valuemin="0" aria-valuemax="4"
+                         aria-valuenow="0" aria-valuetext="0 de 4 etapas completadas">
+                        <span class="form-progress__fill" id="formProgressFill"></span>
+                    </div>
+                    <div class="form-progress__status" id="formProgressStatus" aria-live="polite">
+                        Completa los datos para avanzar.
+                    </div>
                 </div>
 
                 <div class="steps form-steps" id="formSteps">
-                    <div class="step active">
+                    <div class="step active" aria-current="step">
                         <span class="step-ico"><svg class="icon"><use href="#i-grid"/></svg></span>
                         <span class="step-text">
                             <strong>Tipo</strong>
@@ -104,24 +119,24 @@
                         </span>
                     </div>
                     <div class="step">
-                        <span class="step-ico"><svg class="icon"><use href="#i-file-text"/></svg></span>
+                        <span class="step-ico"><svg class="icon"><use id="stepDetailIcon" href="#i-file-text"/></svg></span>
                         <span class="step-text">
-                            <strong>Detalle</strong>
-                            <small>Información o accesos</small>
+                            <strong id="stepDetailTitle">Detalle de información</strong>
+                            <small id="stepDetailDescription">Documento y motivo</small>
                         </span>
                     </div>
                     <div class="step">
                         <span class="step-ico"><svg class="icon"><use href="#i-paperclip"/></svg></span>
                         <span class="step-text">
-                            <strong>Adjunto y envío</strong>
-                            <small>Revisión final</small>
+                            <strong>Evidencia y envío</strong>
+                            <small id="stepFinalDescription">Evidencia obligatoria · revisión final</small>
                         </span>
                     </div>
                 </div>
 
                 <div class="form-steps-foot">
                     <svg class="icon icon-xs"><use href="#i-shield-check"/></svg>
-                    <span>Podrás revisar todo antes de enviar.</span>
+                    <span id="formStepsFootText">Revisa los datos antes de enviar o guarda un borrador para continuar después.</span>
                 </div>
             </div>
         </aside>
@@ -216,10 +231,10 @@
                             <span class="section-num">03</span>
                             <div>
                                 <h2 class="block-title">
-                                    <svg class="icon"><use href="#i-file-text"/></svg>
-                                    Detalle
+                                    <svg class="icon"><use id="detailBlockIcon" href="#i-file-text"/></svg>
+                                    <span id="detailBlockTitle">Detalle de información</span>
                                 </h2>
-                                <p class="block-sub">Cuéntanos exactamente qué información o acceso necesitas.</p>
+                                <p class="block-sub" id="detailBlockDescription">Elige el documento o la información que necesitas y explica el motivo.</p>
                             </div>
                         </div>
 
@@ -326,14 +341,15 @@
                             <span class="section-num">04</span>
                             <div>
                                 <h2 class="block-title">
-                                    <svg class="icon"><use href="#i-paperclip"/></svg>
-                                    Adjunto <span class="optional">Opcional</span>
+                                    <svg class="icon"><use href="#i-shield-check"/></svg>
+                                    <span id="evidenceBlockTitle">Evidencia de respaldo</span>
+                                    <span class="required-mark">Obligatoria</span>
                                 </h2>
-                                <p class="block-sub">Puedes adjuntar un archivo de respaldo para tu solicitud.</p>
+                                <p class="block-sub" id="attachmentBlockDescription">Adjunta un archivo que respalde tu solicitud. Es obligatorio para enviarla.</p>
                             </div>
                         </div>
                         <div class="file-row">
-                            <input id="archivo" type="file" name="archivo"
+                            <input id="archivo" type="file" name="archivo" required
                                    accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt">
                             <span class="file-chip" id="archivoPreview" hidden>
                                 <svg class="icon icon-xs"><use href="#i-file"/></svg>
@@ -341,7 +357,7 @@
                                 <button type="button" id="btnQuitarArchivo" title="Quitar archivo">&times;</button>
                             </span>
                         </div>
-                        <p class="form-hint">PDF, Word, Excel, texto o imágenes. Máximo 10 MB.</p>
+                        <p class="form-hint">La evidencia es obligatoria. PDF, Word, Excel, texto o imágenes; máximo 10 MB.</p>
                     </div>
 
                     <div class="form-alert" id="formError" role="alert" aria-live="assertive" hidden>
@@ -367,26 +383,53 @@
                     <div class="modal-overlay" id="modalRevision" aria-hidden="true" hidden>
                         <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
                             <div class="modal-head">
-                                <div class="modal-brand">
-                                    <svg class="icon icon-brand"><use href="#i-grid"/></svg>
-                                    <span>Nuevo Horizonte</span>
-                                </div>
-                                <div>
-                                    <span class="eyebrow">Revisión de solicitud</span>
-                                    <h2 id="modalTitulo">Confirma los datos antes de enviar</h2>
+                                <div class="modal-head__identity">
+                                    <img th:src="@{/img/logo.png}" alt="" class="review-brand__logo">
+                                    <div class="modal-head__copy">
+                                        <span class="eyebrow">Revisión final</span>
+                                        <h2 id="modalTitulo">Confirma los datos de tu solicitud</h2>
+                                        <p>Comprueba la información antes de enviarla al equipo de aprobación.</p>
+                                    </div>
                                 </div>
                                 <button type="button" class="modal-close" id="btnCerrarModal" aria-label="Cerrar">&times;</button>
                             </div>
                             <div class="modal-body">
+                                <div class="review-intro">
+                                    <span class="review-intro__icon">
+                                        <svg class="icon"><use href="#i-check-circle"/></svg>
+                                    </span>
+                                    <div>
+                                        <strong>Todo listo para revisar</strong>
+                                        <p>Verifica el tipo, tus datos y el detalle. Si necesitas cambiar algo, vuelve al formulario.</p>
+                                    </div>
+                                    <span class="review-intro__badge">
+                                        <svg class="icon"><use href="#i-lock"/></svg>
+                                        Revisión segura
+                                    </span>
+                                </div>
+                                <section class="review-highlight" aria-label="Resumen principal de la solicitud">
+                                    <span class="review-highlight__icon">
+                                        <svg class="icon"><use href="#i-file-text"/></svg>
+                                    </span>
+                                    <div class="review-highlight__content">
+                                        <span class="review-highlight__label">Lo que estás solicitando</span>
+                                        <strong id="rvResumenTipo">Información</strong>
+                                        <p id="rvResumenDetalle"></p>
+                                    </div>
+                                    <span class="review-highlight__status">
+                                        <svg class="icon"><use href="#i-check-circle"/></svg>
+                                        Lista para enviar
+                                    </span>
+                                </section>
                                 <div class="review-sections">
-                                    <section class="review-section" id="secTipo">
+                                    <section class="review-section review-section--type" id="secTipo">
                                         <header>
                                             <svg class="icon"><use href="#i-grid"/></svg>
                                             <h3>Tipo de solicitud</h3>
                                         </header>
                                         <div class="review-value" id="rvTipo"></div>
                                     </section>
-                                    <section class="review-section" id="secSolicitante">
+                                    <section class="review-section review-section--requester" id="secSolicitante">
                                         <header>
                                             <svg class="icon"><use href="#i-user"/></svg>
                                             <h3>Solicitante</h3>
@@ -402,44 +445,48 @@
                                             </div>
                                         </div>
                                     </section>
-                                    <section class="review-section" id="secDetalle">
+                                    <section class="review-section review-section--detail" id="secDetalle">
                                         <header>
                                             <svg class="icon"><use href="#i-file-text"/></svg>
                                             <h3>Información solicitada</h3>
                                         </header>
                                         <div class="review-value" id="rvInfo"></div>
                                     </section>
-                                    <section class="review-section" id="secModulos" hidden>
+                                    <section class="review-section review-section--modules" id="secModulos" hidden>
                                         <header>
                                             <svg class="icon"><use href="#i-layer"/></svg>
                                             <h3>Módulos y accesos</h3>
                                         </header>
                                         <div class="review-chips" id="rvModulos"></div>
                                     </section>
-                                    <section class="review-section" id="secVigencia" hidden>
+                                    <section class="review-section review-section--validity" id="secVigencia" hidden>
                                         <header>
                                             <svg class="icon"><use href="#i-calendar"/></svg>
                                             <h3>Vigencia</h3>
                                         </header>
                                         <div class="review-value" id="rvVigencia"></div>
                                     </section>
-                                    <section class="review-section" id="secAdjunto">
-                                        <header>
-                                            <svg class="icon"><use href="#i-paperclip"/></svg>
-                                            <h3>Adjunto</h3>
-                                        </header>
-                                        <div class="review-value" id="rvAdjunto"></div>
-                                    </section>
-                                    <section class="review-section" id="secMotivo">
+                                    <section class="review-section review-section--reason" id="secMotivo">
                                         <header>
                                             <svg class="icon"><use href="#i-message-square"/></svg>
                                             <h3>Motivo</h3>
                                         </header>
                                         <div class="review-value" id="rvMotivo"></div>
                                     </section>
+                                    <section class="review-section review-section--attachment" id="secAdjunto">
+                                        <header>
+                                            <svg class="icon"><use href="#i-paperclip"/></svg>
+                                            <h3>Evidencia</h3>
+                                        </header>
+                                        <div class="review-value" id="rvAdjunto"></div>
+                                    </section>
                                 </div>
                             </div>
                             <div class="modal-foot">
+                                <span class="review-footnote">
+                                    <svg class="icon"><use href="#i-shield-check"/></svg>
+                                    Podrás volver y corregir cualquier dato antes de enviarla.
+                                </span>
                                 <button type="button" class="btn btn-ghost" id="btnVolver">
                                     <svg class="icon"><use href="#i-arrow-left"/></svg>
                                     Volver
@@ -483,8 +530,8 @@
                     <strong id="resumenVigencia">No aplica</strong>
                 </div>
                 <div class="summary-block summary-block--inline">
-                    <span class="summary-label">Adjunto</span>
-                    <strong id="resumenAdjunto">Sin adjunto</strong>
+                    <span class="summary-label">Evidencia</span>
+                    <strong id="resumenAdjunto">Pendiente</strong>
                 </div>
 
                 <div class="summary-total">
@@ -543,8 +590,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnQuitarArchivo = document.getElementById('btnQuitarArchivo');
     const pasos = document.querySelectorAll('#formSteps .step');
     const bloques = document.querySelectorAll('.form-block');
+    const formProgressTrack = document.getElementById('formProgressTrack');
+    const formProgressFill = document.getElementById('formProgressFill');
+    const formProgressLabel = document.getElementById('formProgressLabel');
+    const formProgressName = document.getElementById('formProgressName');
+    const formProgressStatus = document.getElementById('formProgressStatus');
+    const formProgress = document.querySelector('.form-progress');
+    const formStepsIntro = document.getElementById('formStepsIntro');
+    const formStepsFootText = document.getElementById('formStepsFootText');
+    const stepDetailTitle = document.getElementById('stepDetailTitle');
+    const stepDetailDescription = document.getElementById('stepDetailDescription');
+    const stepDetailIcon = document.getElementById('stepDetailIcon');
+    const stepFinalDescription = document.getElementById('stepFinalDescription');
+    const evidenceBlockTitle = document.getElementById('evidenceBlockTitle');
+    const detailBlockIcon = document.getElementById('detailBlockIcon');
+    const detailBlockTitle = document.getElementById('detailBlockTitle');
+    const detailBlockDescription = document.getElementById('detailBlockDescription');
+    const attachmentBlockDescription = document.getElementById('attachmentBlockDescription');
 
     let envioConfirmado = false;
+    let indicePasoActivo = 0;
     let ultimoFoco = null;
 
     function elementosEnfocables() {
@@ -597,15 +662,175 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function activarPaso(indice) {
-        pasos.forEach(function (paso, i) {
-            paso.classList.toggle('active', i === indice);
-            paso.classList.toggle('done', i < indice);
+    function camposObligatoriosValidos(contenedor) {
+        return Array.prototype.every.call(
+            contenedor.querySelectorAll('input[required], select[required], textarea[required]'),
+            function (campo) {
+                return campo.disabled || campo.checkValidity();
+            }
+        );
+    }
+
+    function actualizarTextosTipo() {
+        const acceso = esAcceso();
+        const titulo = acceso ? 'Detalle de acceso' : 'Detalle de información';
+        const descripcion = acceso
+            ? 'Módulos, vigencia y motivo'
+            : 'Documento y motivo';
+        const introduccion = acceso
+            ? 'Indica a qué módulos necesitas acceso y por cuánto tiempo.'
+            : 'Indica qué documento o información necesitas.';
+
+        if (stepDetailTitle) {
+            stepDetailTitle.textContent = titulo;
+        }
+        if (stepDetailDescription) {
+            stepDetailDescription.textContent = descripcion;
+        }
+        if (stepDetailIcon) {
+            stepDetailIcon.setAttribute('href', acceso ? '#i-key' : '#i-file-text');
+        }
+        if (detailBlockTitle) {
+            detailBlockTitle.textContent = titulo;
+        }
+        if (detailBlockDescription) {
+            detailBlockDescription.textContent = acceso
+                ? 'Selecciona los módulos, define la vigencia del permiso y explica el motivo.'
+                : 'Elige el documento o la información que necesitas y explica el motivo.';
+        }
+        if (detailBlockIcon) {
+            detailBlockIcon.setAttribute('href', acceso ? '#i-key' : '#i-file-text');
+        }
+        if (stepFinalDescription) {
+            stepFinalDescription.textContent = acceso
+                ? 'Evidencia obligatoria para el acceso'
+                : 'Evidencia obligatoria para la solicitud';
+        }
+        if (evidenceBlockTitle) {
+            evidenceBlockTitle.textContent = acceso
+                ? 'Evidencia del acceso solicitado'
+                : 'Evidencia de respaldo';
+        }
+        if (attachmentBlockDescription) {
+            attachmentBlockDescription.textContent = acceso
+                ? 'Adjunta un documento que justifique los módulos y el nivel de acceso que solicitas. Es obligatorio para enviar.'
+                : 'Adjunta un documento que respalde la información que solicitas. Es obligatorio para enviar.';
+        }
+        if (formStepsIntro) {
+            formStepsIntro.textContent = introduccion
+                + ' Puedes revisar tus datos antes de enviar la solicitud.';
+        }
+        if (formStepsFootText) {
+            formStepsFootText.textContent = acceso
+                ? 'Revisa módulos y vigencia antes de enviar, o guarda un borrador para continuar después.'
+                : 'Revisa la información solicitada antes de enviar, o guarda un borrador para continuar después.';
+        }
+    }
+
+    function actualizarEstadoPasos() {
+        const acceso = esAcceso();
+        const campoNombre = document.getElementById('nombreSolicitante');
+        const campoMotivo = document.getElementById('motivo');
+        const nombre = campoNombre.value.trim();
+        const area = document.getElementById('areaActualTexto').textContent.trim();
+        const motivo = campoMotivo.value.trim();
+        const tipoCompleto = Boolean(document.querySelector('input[name="tipoSolicitud"]:checked'));
+        const solicitanteCompleto = Boolean(nombre && area && campoNombre.checkValidity());
+        const detalleCompleto = Boolean(motivo && campoMotivo.checkValidity()) && (acceso
+            ? moduloSeleccionado()
+            : camposObligatoriosValidos(seccionInformacion)
+                && Boolean(tipoInformacion.value)
+                && (tipoInformacion.value !== 'OTRO' || Boolean(recursoModulo.value.trim())));
+        const evidenciaCompleta = Boolean(
+            archivoInput.files.length > 0
+                && archivoInput.files.item(0)
+                && archivoInput.checkValidity()
+        );
+        const datosObligatoriosCompletos = tipoCompleto && solicitanteCompleto && detalleCompleto;
+        const estados = [
+            tipoCompleto,
+            solicitanteCompleto,
+            detalleCompleto,
+            datosObligatoriosCompletos && evidenciaCompleta
+        ];
+        const nombresPasos = Array.prototype.map.call(pasos, function (paso) {
+            const titulo = paso.querySelector('strong');
+            return titulo ? titulo.textContent.trim() : 'Etapa';
         });
+        let completados = 0;
+
+        pasos.forEach(function (paso, indice) {
+            const completo = estados[indice];
+            paso.classList.toggle('done', completo);
+            paso.classList.toggle('is-incomplete', !completo);
+            paso.classList.toggle('active', indice === indicePasoActivo);
+            if (completo) {
+                completados++;
+            }
+        });
+
+        const totalPasos = pasos.length;
+        const todoCompleto = totalPasos > 0 && completados === totalPasos;
+        if (formProgressFill) {
+            formProgressFill.style.width = (totalPasos ? completados / totalPasos * 100 : 0) + '%';
+        }
+        if (formProgressTrack) {
+            formProgressTrack.setAttribute('aria-valuenow', completados);
+            formProgressTrack.setAttribute(
+                'aria-valuetext',
+                completados + ' de ' + totalPasos + ' etapas completadas'
+            );
+        }
+        if (formProgress) {
+            formProgress.classList.toggle('is-complete', todoCompleto);
+        }
+        if (todoCompleto) {
+            if (formProgressLabel) {
+                formProgressLabel.textContent = '¡Solicitud perfecta!';
+            }
+            if (formProgressName) {
+                formProgressName.textContent = 'Todo está listo para enviar';
+            }
+            if (formProgressStatus) {
+                formProgressStatus.textContent = 'Las 4 etapas están completas. Puedes revisar y enviar tu solicitud.';
+            }
+        } else {
+            const pasoActual = pasos[indicePasoActivo];
+            const nombrePaso = pasoActual && pasoActual.querySelector('strong')
+                ? pasoActual.querySelector('strong').textContent.trim()
+                : '';
+            if (formProgressLabel) {
+                formProgressLabel.textContent = 'Paso ' + (indicePasoActivo + 1) + ' de ' + totalPasos;
+            }
+            if (formProgressName) {
+                formProgressName.textContent = nombrePaso;
+            }
+            if (formProgressStatus) {
+                const pendientes = nombresPasos.filter(function (nombre, indice) {
+                    return !estados[indice];
+                });
+                const cantidad = pendientes.length === 1 ? 'etapa pendiente' : 'etapas pendientes';
+                formProgressStatus.textContent = completados + ' de ' + totalPasos
+                    + ' etapas completas. ' + cantidad + ': ' + pendientes.join(', ') + '.';
+            }
+        }
+    }
+
+    function activarPaso(indice) {
+        indicePasoActivo = indice;
+        pasos.forEach(function (paso, i) {
+            if (i === indice) {
+                paso.setAttribute('aria-current', 'step');
+            } else {
+                paso.removeAttribute('aria-current');
+            }
+        });
+        actualizarEstadoPasos();
     }
 
     function actualizarTipo() {
         const acceso = esAcceso();
+        actualizarTextosTipo();
         seccionInformacion.hidden = acceso;
         seccionAcceso.hidden = !acceso;
         tipoInformacion.required = !acceso;
@@ -618,6 +843,7 @@ document.addEventListener('DOMContentLoaded', function () {
         actualizarDetalleInfo();
         actualizarContador();
         limpiarError();
+        actualizarEstadoPasos();
     }
 
     function actualizarDetalleInfo() {
@@ -688,12 +914,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const area = document.getElementById('areaActualTexto').textContent.trim();
         const modulosSeleccionados = document.querySelectorAll('input[name="modulosAcceso"]:checked').length;
 
+        setTexto('rvResumenTipo', acceso ? 'Acceso a módulos' : 'Información solicitada');
+        setTexto('rvResumenDetalle', acceso
+            ? modulosSeleccionados + (modulosSeleccionados === 1 ? ' módulo seleccionado' : ' módulos seleccionados')
+                + ' · ' + vigenciaTexto()
+            : nombreInformacion());
         document.getElementById('rvTipo').textContent = acceso ? 'Acceso a módulos' : 'Información';
         document.getElementById('rvSolicitante').textContent = nombre || 'Sin nombre';
         document.getElementById('rvArea').textContent = area || 'Sin área';
         document.getElementById('rvAdjunto').textContent = archivoInput.files.length > 0
             ? archivoInput.files[0].name
-            : 'Sin adjunto';
+            : 'Evidencia pendiente';
         document.getElementById('rvMotivo').textContent = document.getElementById('motivo').value.trim()
             || 'Sin motivo indicado';
 
@@ -738,7 +969,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTexto('resumenVigencia', acceso ? vigenciaTexto() : 'No aplica');
         setTexto('resumenAdjunto', archivoInput.files.length > 0
             ? archivoInput.files[0].name
-            : 'Sin adjunto');
+            : 'Evidencia pendiente');
         setTexto('resumenEstado', acceso && !moduloSeleccionado()
             ? (sinModulos ? 'Sin módulos pendientes' : 'Falta elegir módulos')
             : 'Listo para revisar');
@@ -746,6 +977,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function abrirRevision() {
         limpiarError();
+        actualizarEstadoPasos();
         if (!form.reportValidity()) {
             return;
         }
@@ -831,7 +1063,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (tipoInformacion) {
         tipoInformacion.addEventListener('change', function () {
             actualizarDetalleInfo();
-            actualizarResumen();
         });
     }
     document.querySelectorAll('input[name="tipoSolicitud"]').forEach(function (radio) {
@@ -840,17 +1071,15 @@ document.addEventListener('DOMContentLoaded', function () {
             actualizarResumen();
         });
     });
-    document.querySelectorAll('input[name="modulosAcceso"]').forEach(function (check) {
-        check.addEventListener('change', function () {
-            actualizarContador();
-            actualizarResumen();
-        });
-    });
-    document.querySelectorAll('select[name^="nivelesModulo"]').forEach(function (select) {
-        select.addEventListener('change', actualizarResumen);
-    });
-    document.querySelectorAll('#solicitudForm input, #solicitudForm textarea').forEach(function (campo) {
-        campo.addEventListener('input', actualizarResumen);
+    function actualizarFormularioEnVivo() {
+        actualizarEstadoPasos();
+        actualizarResumen();
+        actualizarContador();
+    }
+    form.addEventListener('input', actualizarFormularioEnVivo, true);
+    form.addEventListener('change', actualizarFormularioEnVivo, true);
+    form.addEventListener('reset', function () {
+        window.requestAnimationFrame(actualizarFormularioEnVivo);
     });
 
     if (archivoInput) {
@@ -868,7 +1097,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnQuitarArchivo.addEventListener('click', function () {
             archivoInput.value = '';
             archivoPreview.hidden = true;
-            actualizarResumen();
+            actualizarFormularioEnVivo();
         });
     }
 
