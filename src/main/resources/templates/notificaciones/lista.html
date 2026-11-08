@@ -44,17 +44,69 @@
         <span th:text="${mensaje}"></span>
     </div>
 
-    <section class="card card--notificaciones" th:if="${!#lists.isEmpty(notificaciones)}">
+    <div class="notif-stats" th:if="${!#lists.isEmpty(notificaciones)}">
+        <div class="notif-stat">
+            <span class="notif-stat__ico">
+                <svg class="icon"><use href="#i-inbox"/></svg>
+            </span>
+            <div class="notif-stat__body">
+                <strong th:text="${totalNotificaciones}">0</strong>
+                <span>En total</span>
+            </div>
+        </div>
+        <div class="notif-stat notif-stat--pending">
+            <span class="notif-stat__ico">
+                <svg class="icon"><use href="#i-bell"/></svg>
+            </span>
+            <div class="notif-stat__body">
+                <strong th:text="${noLeidas}">0</strong>
+                <span>Sin leer</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="notif-list" th:if="${!#lists.isEmpty(notificaciones)}">
         <a th:each="n : ${notificaciones}"
            th:href="@{'/notificaciones/' + ${n.id} + '/abrir'}"
-           class="notif-item" th:classappend="${!n.leida} ? 'unread' : ''">
-            <span class="notif-dot"></span>
+           class="notif-item" th:classappend="${!n.leida} ? 'unread' : ''"
+           th:with="esOk=${#strings.contains(#strings.toLowerCase(n.titulo), 'aprob')},
+                    esBad=${#strings.contains(#strings.toLowerCase(n.titulo), 'rechaz')},
+                    esPropuesta=${#strings.contains(#strings.toLowerCase(n.titulo), 'propuesta')},
+                    esAcceso=${#strings.contains(#strings.toLowerCase(n.titulo), 'rol') or #strings.contains(#strings.toLowerCase(n.titulo), 'acceso') or #strings.contains(#strings.toLowerCase(n.titulo), 'vencid')},
+                    esDoc=${#strings.contains(#strings.toLowerCase(n.titulo), 'document')}">
+
+            <span class="notif-ico notif-ico--ok" th:if="${esOk}">
+                <svg class="icon"><use href="#i-check-circle"/></svg>
+            </span>
+            <span class="notif-ico notif-ico--bad" th:if="${esBad}">
+                <svg class="icon"><use href="#i-x"/></svg>
+            </span>
+            <span class="notif-ico notif-ico--info" th:if="${!esOk and !esBad and esPropuesta}">
+                <svg class="icon"><use href="#i-send"/></svg>
+            </span>
+            <span class="notif-ico notif-ico--warn" th:if="${!esOk and !esBad and !esPropuesta and esAcceso}">
+                <svg class="icon"><use href="#i-shield"/></svg>
+            </span>
+            <span class="notif-ico notif-ico--doc" th:if="${!esOk and !esBad and !esPropuesta and !esAcceso and esDoc}">
+                <svg class="icon"><use href="#i-file-text"/></svg>
+            </span>
+            <span class="notif-ico notif-ico--default" th:if="${!esOk and !esBad and !esPropuesta and !esAcceso and !esDoc}">
+                <svg class="icon"><use href="#i-bell"/></svg>
+            </span>
+
             <div class="notif-body">
-                <strong th:text="${n.titulo}"></strong>
-                <p th:text="${n.mensaje}"></p>
-                <small th:text="${#strings.replace(#strings.substring(n.fechaCreacion.toString(), 0, 16), 'T', ' ')}"></small>
+                <div class="notif-top">
+                    <strong th:text="${n.titulo}">Título</strong>
+                    <span class="notif-new" th:if="${!n.leida}">Nueva</span>
+                    <time class="notif-time"
+                          th:text="${n.fechaCreacion != null ? #temporals.format(n.fechaCreacion, 'dd/MM/yyyy · HH:mm') : '—'}">06/11/2026 · 21:50</time>
+                </div>
+                <p th:text="${n.mensaje}">Mensaje</p>
             </div>
-            <svg class="icon notif-arrow"><use href="#i-arrow-left"/></svg>
+
+            <span class="notif-arrow">
+                <svg class="icon"><use href="#i-arrow-left"/></svg>
+            </span>
         </a>
     </section>
 
@@ -63,8 +115,8 @@
             <div class="empty-icon">
                 <svg class="icon"><use href="#i-bell"/></svg>
             </div>
-            <h2>Sin notificaciones</h2>
-            <p>Cuando haya movimientos en tus solicitudes aparecerán aquí.</p>
+            <h2>Todo al día</h2>
+            <p>No tienes notificaciones pendientes. Cuando haya movimientos en tus solicitudes o documentos aparecerán aquí.</p>
         </div>
     </section>
 </main>

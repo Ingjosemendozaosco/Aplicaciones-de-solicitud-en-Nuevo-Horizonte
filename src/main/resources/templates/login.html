@@ -26,9 +26,7 @@
 <main id="contenido" tabindex="-1" class="login-shell">
     <section class="login-showcase" aria-label="Información del sistema">
         <div class="login-showcase__brand">
-            <span class="logo-badge">
-                <svg class="icon"><use href="#i-compass"/></svg>
-            </span>
+            <img th:src="@{/img/logo.png}" alt="Logo Nuevo Horizonte" class="login-showcase__logo"/>
             <div>
                 <strong>Nuevo Horizonte</strong>
                 <span>Gestión de solicitudes</span>
@@ -69,7 +67,8 @@
         </div>
 
         <div class="login-showcase__foot">
-            <span><svg class="icon icon-xs"><use href="#i-lock"/></svg> Acceso seguro</span>
+            <img th:src="@{/img/chica_recepcionista.png}" alt="Recepcionista Nuevo Horizonte" class="login-showcase__person"/>
+            <span class="login-footer__wrap"><svg class="icon icon-xs"><use href="#i-lock"/></svg> Acceso seguro</span>
             <span>© 2026 Nuevo Horizonte</span>
         </div>
     </section>

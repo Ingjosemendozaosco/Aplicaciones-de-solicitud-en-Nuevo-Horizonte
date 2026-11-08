@@ -616,9 +616,10 @@ public class SolicitudService {
     }
 
     /**
-     * Documentos activos que el usuario todavía no ha recibido en una solicitud
-     * de información aprobada. Los documentos entregados quedan vinculados por
-     * el nombre del archivo del informe.
+     * Documentos activos que el usuario aún NO tiene desbloqueados (no han sido
+     * aprobados en una solicitud de INFORMACIÓN). Son los que puede solicitar
+     * desde el formulario. Gerencia y Administración ya ven todo y no necesitan
+     * solicitarlos.
      */
     @Transactional(readOnly = true)
     public List<Documento> documentosSinRecibir(String username) {
@@ -627,8 +628,7 @@ public class SolicitudService {
             return activos;
         }
         Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
-        if (usuario != null && tieneAccesoModulo(usuario, ModuloCatalogo.DOCUMENTOS)) {
-            // Ya tiene acceso completo al módulo de Documentos: no necesita pedir ninguno.
+        if (esGestorDocumentos(usuario)) {
             return List.of();
         }
         Set<String> recibidos = new HashSet<>();
@@ -650,6 +650,72 @@ public class SolicitudService {
             }
         }
         return pendientes;
+    }
+
+    /**
+     * IDs de los documentos que el usuario puede ver/descargar: aquellos que ya
+     * fueron aprobados en una solicitud de INFORMACIÓN, o todos si pertenece a
+     * Gerencia o Administración.
+     */
+    @Transactional(readOnly = true)
+    public Set<Long> documentosDesbloqueados(String username) {
+        List<Documento> activos = documentoRepository.findByActivoTrueOrderByFechaSubidaDesc();
+        Set<Long> desbloqueados = new HashSet<>();
+        if (username == null) {
+            for (Documento doc : activos) {
+                desbloqueados.add(doc.getId());
+            }
+            return desbloqueados;
+        }
+        Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
+        if (esGestorDocumentos(usuario)) {
+            for (Documento doc : activos) {
+                desbloqueados.add(doc.getId());
+            }
+            return desbloqueados;
+        }
+        Set<String> recibidos = new HashSet<>();
+        for (Solicitud solicitud : solicitudRepository.findByUsuarioUsername(username)) {
+            if (solicitud.getEstado() != EstadoSolicitud.APROBADA
+                    || solicitud.getTipoSolicitud() != TipoSolicitud.INFORMACION) {
+                continue;
+            }
+            if (solicitud.getNombreInforme() != null && !solicitud.getNombreInforme().isBlank()) {
+                recibidos.add(normalizar(solicitud.getNombreInforme()));
+            }
+        }
+        for (Documento doc : activos) {
+            if (recibidos.contains(normalizar(doc.getNombreArchivo()))
+                    || recibidos.contains(normalizar(doc.getNombre()))) {
+                desbloqueados.add(doc.getId());
+            }
+        }
+        return desbloqueados;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean tieneAccesoDocumento(String username, Long idDocumento) {
+        return idDocumento != null && documentosDesbloqueados(username).contains(idDocumento);
+    }
+
+    /**
+     * Gerencia y Administración administran los documentos: ven todos sin
+     * necesidad de una solicitud aprobada.
+     */
+    private boolean esGestorDocumentos(Usuario usuario) {
+        if (usuario == null) {
+            return false;
+        }
+        for (Rol rol : usuario.rolesVigentes()) {
+            if (rol == null || !rol.isActivo()) {
+                continue;
+            }
+            String nombre = rol.getNombre();
+            if (nombre != null && (nombre.contains("Gerencia") || nombre.contains("Administra"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String normalizar(String valor) {
