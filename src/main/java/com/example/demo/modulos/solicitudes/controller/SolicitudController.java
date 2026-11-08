@@ -215,7 +215,7 @@ public class SolicitudController {
             documentos.stream()
                     .filter(doc -> coincideDocumentoSolicitado(
                             solicitud.getRecursoModulo(), doc.getNombre()))
-                    .findFirst()
+                    .max(java.util.Comparator.comparingInt(doc -> doc.getNombre().length()))
                     .ifPresent(doc -> decision.setIdDocumento(doc.getId()));
         }
         model.addAttribute("decision", decision);

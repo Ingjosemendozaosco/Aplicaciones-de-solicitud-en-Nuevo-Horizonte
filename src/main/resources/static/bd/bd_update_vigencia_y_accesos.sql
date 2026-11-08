@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS solicitud_acceso_detalle (
 
 -- 6. Informe entregado por el administrador (solicitudes de información)
 ALTER TABLE solicitud ADD COLUMN IF NOT EXISTS nombre_informe      VARCHAR(255);
+ALTER TABLE solicitud ADD COLUMN IF NOT EXISTS id_documento_informe BIGINT;
 ALTER TABLE solicitud ADD COLUMN IF NOT EXISTS tipo_informe        VARCHAR(100);
 ALTER TABLE solicitud ADD COLUMN IF NOT EXISTS contenido_informe   BYTEA;
 

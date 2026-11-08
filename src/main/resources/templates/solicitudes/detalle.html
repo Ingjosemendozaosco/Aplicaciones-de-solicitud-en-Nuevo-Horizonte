@@ -127,15 +127,23 @@
                 </header>
 
                 <div class="sol-person">
-                    <div class="sol-person__avatar-wrapper">
+                    <div class="sol-person__avatar sol-person__avatar--area"
+                         th:if="${solicitud.areaSolicitante != null and !#strings.isEmpty(solicitud.areaSolicitante)}"
+                         aria-hidden="true">
                         <svg class="icon icon--area"
-                             th:if="${solicitud.areaSolicitante == 'Area de Producto'}"><use href="#i-layer"/></svg>
-                             th:if="${solicitud.areaSolicitante == 'Area de Ventas'}"><use href="#i-shield"/></svg>
-                             th:if="${solicitud.areaSolicitante == 'Gerencia'}"><use href="#i-building"/></svg>
-                             th:if="${solicitud.areaSolicitante == 'Administración'}"><use href="#i-user"/></svg>
+                             th:if="${solicitud.areaSolicitante.contains('Area de Producto')}"><use href="#i-layer"/></svg>
+                        <svg class="icon icon--area"
+                             th:if="${solicitud.areaSolicitante.contains('Area de Ventas')}"><use href="#i-trending-up"/></svg>
+                        <svg class="icon icon--area"
+                             th:if="${solicitud.areaSolicitante.contains('Gerencia')}"><use href="#i-building"/></svg>
+                        <svg class="icon icon--area"
+                             th:if="${solicitud.areaSolicitante.contains('Administración')}"><use href="#i-shield-check"/></svg>
+                    </div>
+                    <div class="sol-person__avatar sol-person__avatar--area"
+                         th:if="${solicitud.areaSolicitante == null or #strings.isEmpty(solicitud.areaSolicitante)}"
+                         aria-hidden="true">
                         <span class="fallback-letter"
-                              th:if="#strings.isEmpty(solicitud.areaSolicitante)"
-                              th:text="${solicitud.nombreSolicitante?.substring(0, 1).toUpperCase()}">A</span>
+                              th:text="${#strings.isEmpty(solicitud.nombreSolicitante) ? '?' : #strings.substring(solicitud.nombreSolicitante, 0, 1).toUpperCase()}">A</span>
                     </div>
                     <div class="sol-person__info">
                         <strong class="sol-person__name" th:text="${solicitud.nombreSolicitante}">Nombre</strong>
@@ -152,8 +160,8 @@
                 <div class="roles-actuales sol-person__roles"
                      th:if="${!#lists.isEmpty(solicitud.rolesSolicitante)}">
                     <span class="rol-chip" th:each="r : ${solicitud.rolesSolicitante}"
-                          th:style="'background:' + ${r.color} + '22;color:' + ${r.color} + ';border-color:' + ${r.color} + '55'">
-                        <span class="rol-dot" th:style="'background:' + ${r.color}"></span>
+                          th:style="${'background:' + r.color + '22;color:' + r.color + ';border-color:' + r.color + '55'}">
+                        <span class="rol-dot" th:style="${'background:' + r.color}"></span>
                         <span th:text="${r.nombre}"></span>
                     </span>
                 </div>
@@ -270,6 +278,22 @@
                 </header>
 
                 <div class="sol-facts">
+                    <div class="fact">
+                        <span class="fact__label">
+                            <svg class="icon icon-xs"><use href="#i-clock"/></svg>
+                            Vigencia
+                        </span>
+                        <strong class="fact__value" th:if="${solicitud.permanente}">Permanente</strong>
+                        <strong class="fact__value" th:unless="${solicitud.permanente}">
+                            <span th:if="${solicitud.fechaInicioAcceso != null}"
+                                  th:text="${'Inicio: ' + #temporals.format(solicitud.fechaInicioAcceso, 'dd/MM/yyyy')}"></span>
+                            <span th:if="${solicitud.fechaFinAcceso != null}"
+                                  th:text="${' · Fin: ' + #temporals.format(solicitud.fechaFinAcceso, 'dd/MM/yyyy')}"></span>
+                            <span th:if="${solicitud.fechaFinAcceso == null}" class="muted">
+                                · Fin: 30 días después del inicio (automático)
+                            </span>
+                        </strong>
+                    </div>
                     <div class="fact fact--wide">
                         <span class="fact__label">
                             <svg class="icon icon-xs"><use href="#i-layer"/></svg>
@@ -279,22 +303,6 @@
                             <span class="modulo-chip" th:each="d : ${solicitud.detalles}"
                                   th:text="${d.etiqueta + ' (' + d.nivelLegible + ')'}">Módulo</span>
                         </div>
-                    </div>
-                    <div class="fact">
-                        <span class="fact__label">
-                            <svg class="icon icon-xs"><use href="#i-clock"/></svg>
-                            Vigencia
-                        </span>
-                        <strong class="fact__value" th:if="${solicitud.permanente}">Permanente</strong>
-                        <strong class="fact__value" th:unless="${solicitud.permanente}">
-                            <span th:if="${solicitud.fechaInicioAcceso != null}"
-                                  th:text="'Inicio: ' + ${#temporals.format(solicitud.fechaInicioAcceso, 'dd/MM/yyyy')}"></span>
-                            <span th:if="${solicitud.fechaFinAcceso != null}"
-                                  th:text="' · Fin: ' + ${#temporals.format(solicitud.fechaFinAcceso, 'dd/MM/yyyy')}"></span>
-                            <span th:if="${solicitud.fechaFinAcceso == null}" class="muted">
-                                · Fin: 30 días después del inicio (automático)
-                            </span>
-                        </strong>
                     </div>
                 </div>
             </section>
@@ -320,14 +328,14 @@
                     <div class="modulos-actuales-grid">
                         <div class="modulo-card" th:each="m : ${modulosActuales}" th:if="${m.tieneAcceso}">
                             <div class="modulo-card-head">
-                                <span class="color-bar" th:style="'background:' + ${m.gradiente}"></span>
+                                <span class="color-bar" th:style="${'background:' + m.gradiente}"></span>
                                 <strong th:text="${m.etiqueta}"></strong>
                                 <span class="badge"
                                       th:classappend="${m.nivel == 'EDICION' ? 'aprobada' : 'pendiente'}"
                                       th:text="${m.nivelLegible}"></span>
                             </div>
                             <div class="rol-permiso" th:each="r : ${m.roles}">
-                                <span class="rol-dot" th:style="'background:' + ${r.color}"></span>
+                                <span class="rol-dot" th:style="${'background:' + r.color}"></span>
                                 <span class="rol-nombre" th:text="${r.nombre}"></span>
                                 <form th:action="@{'/solicitudes/' + ${solicitud.idSolicitud} + '/modulos/nivel'}"
                                       method="post" class="inline-form">
@@ -540,7 +548,7 @@
                      th:classappend="${aprobada ? 'sol-track--ok' : (decidida ? 'sol-track--bad' : (enRevision ? 'sol-track--progress' : 'sol-track--pending'))}">
                     <div class="sol-track__rail" aria-hidden="true">
                         <span class="sol-track__fill"
-                              th:classappend="${aprobada ? 'sol-track__fill--ok' : (decidida ? 'sol-track__fill--bad' : (enRevision ? 'sol-track__fill--progress' : 'sol-track__fill--pending'))}"></span>
+                              th:classappend="${aprobada ? 'track-fill--ok' : (decidida ? 'track-fill--bad' : (enRevision ? 'track-fill--progress' : 'track-fill--pending'))}"></span>
                     </div>
 
                     <ol class="sol-track__steps">
@@ -594,7 +602,7 @@
                                 </small>
                                 <span class="sol-track__result"
                                       th:if="${decidida}"
-                                      th:classappend="${aprobada ? 'sol-track__result--ok' : 'sol-track__result--bad'}"
+                                      th:classappend="${aprobada ? 'track-result--ok' : 'track-result--bad'}"
                                       th:text="${aprobada ? 'Aprobada' : 'Rechazada'}">Aprobada</span>
                             </div>
                         </li>
